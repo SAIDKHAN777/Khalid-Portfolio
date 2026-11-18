@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     }
 
     if (message === 'INVALID_CREDENTIALS') {
-      return apiError('Invalid email or password', 'INVALID_CREDENTIALS', 401);
+      return apiError('Invalid password', 'INVALID_CREDENTIALS', 401);
     }
 
     return apiError('An unexpected error occurred during login', 'INTERNAL_ERROR', 500);
