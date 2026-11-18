@@ -11,6 +11,23 @@ import type {
   UpdateWorkInput,
 } from '@/lib/validators/portfolio';
 
+function parseTags(val: unknown): string[] {
+  if (Array.isArray(val)) return val.map(String);
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return val ? val.split(',').map((s) => s.trim()).filter(Boolean) : [];
+    }
+  }
+  return [];
+}
+
+function hydrateWork<T extends { tags: unknown }>(work: T): Omit<T, 'tags'> & { tags: string[] } {
+  return { ...work, tags: parseTags(work.tags) };
+}
+
 export class PortfolioService {
   // ==================== SITE SETTINGS ====================
   async getSettings() {
@@ -183,18 +200,20 @@ export class PortfolioService {
     if (filter?.sectionId) where.sectionId = filter.sectionId;
     if (filter?.isPublished !== undefined) where.isPublished = filter.isPublished;
 
-    return await prisma.work.findMany({
+    const works = await prisma.work.findMany({
       where,
       orderBy: { order: 'asc' },
       include: { section: true },
     });
+    return works.map(hydrateWork);
   }
 
   async getWorkById(id: string) {
-    return await prisma.work.findUnique({
+    const work = await prisma.work.findUnique({
       where: { id },
       include: { section: true },
     });
+    return work ? hydrateWork(work) : null;
   }
 
   async createWork(data: WorkInput) {
@@ -220,7 +239,7 @@ export class PortfolioService {
       },
     });
     invalidatePublicCache();
-    return result;
+    return hydrateWork(result);
   }
 
   async updateWork(id: string, data: UpdateWorkInput) {
@@ -233,7 +252,7 @@ export class PortfolioService {
       },
     });
     invalidatePublicCache();
-    return result;
+    return hydrateWork(result);
   }
 
   async deleteWork(id: string) {
@@ -241,7 +260,7 @@ export class PortfolioService {
       where: { id },
     });
     invalidatePublicCache();
-    return result;
+    return hydrateWork(result);
   }
 
   async duplicateWork(id: string) {
@@ -260,7 +279,7 @@ export class PortfolioService {
         sectionId: original.sectionId,
         title: `${original.title} (Copy)`,
         subtitle: original.subtitle,
-        tags: original.tags,
+        tags: JSON.stringify(original.tags ?? []),
         mediaType: original.mediaType,
         mediaUrl: original.mediaUrl,
         posterUrl: original.posterUrl,
@@ -277,7 +296,7 @@ export class PortfolioService {
       },
     });
     invalidatePublicCache();
-    return result;
+    return hydrateWork(result);
   }
 
   async reorderWorks(orderedIds: string[]) {

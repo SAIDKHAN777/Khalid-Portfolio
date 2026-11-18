@@ -10,6 +10,29 @@ import { logger } from '@/lib/logger';
 import { captureServerError } from '@/lib/sentry';
 import { AppError } from '@/lib/errorHandler';
 
+function parseStringArray(val: unknown): string[] {
+  if (Array.isArray(val)) return val.map(String);
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function hydrateProject<T extends { images: unknown; techStack: unknown }>(
+  project: T
+): Omit<T, 'images' | 'techStack'> & { images: string[]; techStack: string[] } {
+  return {
+    ...project,
+    images: parseStringArray(project.images),
+    techStack: parseStringArray(project.techStack),
+  };
+}
+
 export class ProjectService {
   async listProjects(query: PaginationQuery, isAdmin = false) {
     const { page, limit, search, category, featured, status, includeDrafts } = query;
@@ -79,7 +102,7 @@ export class ProjectService {
       ]);
 
       return {
-        projects,
+        projects: projects.map(hydrateProject),
         pagination: {
           page,
           limit,
@@ -134,7 +157,7 @@ export class ProjectService {
         },
       });
 
-      return project;
+      return project ? hydrateProject(project) : null;
     } catch (error) {
       logger.error({ error, slug }, 'Failed to get project by slug');
       captureServerError(error, { service: 'ProjectService.getProjectBySlug', slug });
@@ -177,7 +200,7 @@ export class ProjectService {
         throw new AppError('Project not found', 404, 'NOT_FOUND');
       }
 
-      return project;
+      return project ? hydrateProject(project) : null;
     } catch (error: any) {
       if (error instanceof AppError) throw error;
       logger.error({ error, id }, 'Failed to get project by id');
