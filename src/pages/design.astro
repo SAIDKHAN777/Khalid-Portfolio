@@ -1,0 +1,234 @@
+---
+import '../styles/global.css';
+
+export const prerender = false;
+
+const colors = [
+  { name: 'Page White', hex: '#FCFCFC', var: '--page-white', role: 'Main page & hero background', text: 'text-[#101014]', border: 'border-slate-300' },
+  { name: 'Ink', hex: '#101014', var: '--ink', role: 'Headings, primary text, dark elements', text: 'text-white', border: 'border-transparent' },
+  { name: 'Body Grey', hex: '#484A52', var: '--body-grey', role: 'Intro paragraph, secondary copy', text: 'text-white', border: 'border-transparent' },
+  { name: 'Divider', hex: '#CDCDD0', var: '--divider', role: '2px section & service dividers', text: 'text-[#101014]', border: 'border-slate-300' },
+  { name: 'White', hex: '#FFFFFF', var: '--white', role: 'Buttons, overlays, cards, pill outlines', text: 'text-[#101014]', border: 'border-slate-300' },
+  { name: 'Footer Gradient', hex: '#0A0A0C to #181022', var: '--footer-gradient', role: 'Footer background gradient', text: 'text-white', gradient: true, border: 'border-transparent' },
+];
+
+const typographyScale = [
+  { element: 'Hero "Hello"', baselinePx: '250px', clamp: 'clamp(5rem, 13vw, 15.625rem)', weight: '700 (Bold)', tracking: '-0.03em', font: 'Inter Display' },
+  { element: 'Section Heading Band', baselinePx: 'Auto-fit (Max 400px)', clamp: 'Fluid viewport fit', weight: '700 (Bold)', tracking: '-0.03em', font: 'Inter Display' },
+  { element: 'Footer Headline', baselinePx: 'Auto-fit (Max 320px)', clamp: 'Fluid viewport fit', weight: '700 (Bold)', tracking: '-0.03em', font: 'Inter Display' },
+  { element: 'Service Title', baselinePx: '78px', clamp: 'clamp(2.5rem, 4.06vw, 4.875rem)', weight: '500 (Medium)', tracking: '-0.02em', font: 'Inter Display' },
+  { element: 'Work Panel Title', baselinePx: '44px', clamp: 'clamp(1.75rem, 2.29vw, 2.75rem)', weight: '600 (SemiBold)', tracking: '-0.02em', font: 'Inter Display' },
+  { element: 'Work Panel Subtitle', baselinePx: '44px', clamp: 'clamp(1.75rem, 2.29vw, 2.75rem)', weight: '400 (Regular)', tracking: 'normal', font: 'Inter Display' },
+  { element: 'Footer Subline', baselinePx: '40px', clamp: 'clamp(1.5rem, 2.08vw, 2.5rem)', weight: '400 (Regular)', tracking: 'normal', font: 'Inter Display' },
+  { element: 'Bottom Bar Counter & Text', baselinePx: '34px', clamp: 'clamp(1.25rem, 1.77vw, 2.125rem)', weight: '600 (SemiBold)', tracking: 'normal', font: 'Inter Display' },
+  { element: 'Service Index', baselinePx: '22px', clamp: 'clamp(1rem, 1.15vw, 1.375rem)', weight: '400 (Regular)', tracking: 'monospace', font: 'Inter Mono' },
+  { element: 'Tag Pill Text', baselinePx: '18px', clamp: 'clamp(0.875rem, 0.94vw, 1.125rem)', weight: '500 (Medium)', tracking: 'normal', font: 'Inter Display' },
+  { element: 'Hero Intro Paragraph', baselinePx: '20-24px', clamp: 'clamp(1.125rem, 1.25vw, 1.5rem)', weight: '400 (Regular)', tracking: 'normal', font: 'Source Serif 4' },
+];
+
+const shapes = [
+  { name: 'Tag Pill', spec: 'Fully rounded with 2px white outline (border-white/85), 18px medium text', sample: 'Tag Pill' },
+  { name: 'View Button', spec: '180px diameter white circle (#FFFFFF), ink text, 2.8s organic pulse', sample: 'View' },
+  { name: 'Contact Button', spec: '104px height white pill (#FFFFFF), ink text, rounded-full, 48px padding', sample: 'Contact Us ->' },
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Design Tokens & System Preview | Khalid</title>
+  </head>
+  <body class="bg-[#FCFCFC] text-[#101014] px-8 md:px-16 py-16 max-w-7xl mx-auto space-y-20 selection:bg-[#101014] selection:text-white">
+    <!-- Header -->
+    <header class="border-b-2 border-[#CDCDD0] pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <span class="text-sm font-mono uppercase tracking-widest text-[#484A52]">Design System Specification</span>
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-[#101014] mt-2">Khalid Portfolio Tokens</h1>
+        <p class="text-lg text-[#484A52] font-serif mt-2">
+          Baseline 1920x1080 Reference Tokens mirrored in Figma, CSS Variables, and Tailwind CSS.
+        </p>
+      </div>
+      <div class="flex items-center gap-4">
+        <a
+          href="https://www.figma.com/design/E7tlFyLk2gcmkxZ4vshkxq"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="px-5 py-2.5 rounded-full bg-[#101014] text-white text-sm font-medium hover:bg-slate-800 transition"
+        >
+          View Figma File ↗
+        </a>
+        <a href="/" class="px-5 py-2.5 rounded-full border border-[#CDCDD0] text-[#101014] text-sm font-medium hover:bg-slate-100 transition">
+          Back to Site
+        </a>
+      </div>
+    </header>
+
+    <!-- 1. Color Palette -->
+    <section class="space-y-8">
+      <div>
+        <span class="text-xs font-mono uppercase tracking-wider text-[#484A52]">01 / Foundations</span>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-[#101014]">Color Tokens</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {colors.map((c) => (
+          <div class={`rounded-2xl border ${c.border} overflow-hidden shadow-sm flex flex-col`}>
+            <div
+              class={`h-36 w-full p-4 flex items-end justify-between ${c.text}`}
+              style={c.gradient ? 'background: linear-gradient(180deg, #0A0A0C 0%, #181022 100%);' : `background-color: ${c.hex};`}
+            >
+              <span class="font-mono text-sm font-bold bg-black/30 backdrop-blur-md px-2 py-1 rounded text-white">{c.hex}</span>
+            </div>
+            <div class="p-5 bg-white flex-1 space-y-1">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-lg text-[#101014]">{c.name}</h3>
+                <code class="text-xs font-mono text-slate-500">{c.var}</code>
+              </div>
+              <p class="text-sm text-[#484A52]">{c.role}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- 2. Typography Scale -->
+    <section class="space-y-8">
+      <div>
+        <span class="text-xs font-mono uppercase tracking-wider text-[#484A52]">02 / Hierarchy</span>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-[#101014]">Typography Scale (1920x1080 Baseline)</h2>
+      </div>
+
+      <div class="border border-[#CDCDD0] rounded-2xl overflow-hidden bg-white shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 border-b border-[#CDCDD0] text-xs font-mono uppercase text-[#484A52]">
+              <tr>
+                <th class="p-4">Element</th>
+                <th class="p-4">Baseline Size</th>
+                <th class="p-4">Fluid Clamp</th>
+                <th class="p-4">Weight</th>
+                <th class="p-4">Font Family</th>
+                <th class="p-4">Live Preview</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#CDCDD0]/60">
+              {typographyScale.map((t) => (
+                <tr class="hover:bg-slate-50/50 transition">
+                  <td class="p-4 font-semibold text-[#101014]">{t.element}</td>
+                  <td class="p-4 font-mono font-bold text-blue-600">{t.baselinePx}</td>
+                  <td class="p-4 font-mono text-xs text-slate-500">{t.clamp}</td>
+                  <td class="p-4 text-slate-600">{t.weight}</td>
+                  <td class="p-4 text-slate-600 font-mono text-xs">{t.font}</td>
+                  <td class="p-4">
+                    <span
+                      class={`text-[#101014] ${t.tracking === '-0.03em' ? 'tracking-tight-display' : ''}`}
+                      style={`font-family: ${t.font === 'Source Serif 4' ? 'var(--font-serif)' : 'var(--font-heading)'};`}
+                    >
+                      {t.element.includes('Hello') ? 'Hello' : t.element.includes('Service') ? 'Video Editing' : 'Cinematic Showcase'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Giant Headings & Serif Preview -->
+    <section class="space-y-8 bg-white border border-[#CDCDD0] rounded-3xl p-8 md:p-12 shadow-sm">
+      <div>
+        <span class="text-xs font-mono uppercase tracking-wider text-[#484A52]">03 / Display Scale</span>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-[#101014]">Live Display Typography</h2>
+      </div>
+
+      <div class="space-y-12">
+        <!-- Hello Giant Sample -->
+        <div class="space-y-2 border-b border-[#CDCDD0] pb-8">
+          <span class="text-xs font-mono text-slate-400">Hero Greeting (250px baseline)</span>
+          <div class="text-[clamp(4rem,12vw,14rem)] font-bold tracking-tight-display text-[#101014] leading-none">
+            Hello
+          </div>
+          <div class="w-24 h-2 bg-[#101014] mt-4"></div>
+        </div>
+
+        <!-- Hero Intro Serif Sample -->
+        <div class="space-y-2 border-b border-[#CDCDD0] pb-8">
+          <span class="text-xs font-mono text-slate-400">Hero Intro Paragraph (Source Serif 4)</span>
+          <p class="font-serif text-2xl md:text-3xl text-[#484A52] max-w-2xl leading-relaxed">
+            My name is Khalid. I work as an AI Engineer, AI Automation Expert and Full Stack Developer, building software apps, backend systems, AI platforms and personal AI agents.
+          </p>
+        </div>
+
+        <!-- Section Heading Band Sample -->
+        <div class="space-y-2">
+          <span class="text-xs font-mono text-slate-400">Section Heading Band (48vh, Auto-fit)</span>
+          <div class="w-full bg-[#FCFCFC] border border-[#CDCDD0] p-8 rounded-2xl flex items-center justify-center overflow-hidden">
+            <span class="text-5xl md:text-8xl font-bold uppercase tracking-tight-display text-[#101014]">
+              VIDEO EDITING
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Shapes & Buttons -->
+    <section class="space-y-8">
+      <div>
+        <span class="text-xs font-mono uppercase tracking-wider text-[#484A52]">04 / Geometry & Components</span>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-[#101014]">Shapes & Action Buttons</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Tag Pill -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-3xl text-white space-y-6 flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-mono text-slate-400">Tag Pill</span>
+            <p class="text-sm text-slate-300 mt-1">Fully rounded, 2px white outline, 18px text</p>
+          </div>
+          <div class="flex flex-wrap gap-3 py-6">
+            <span class="shape-tag-pill">Color Grading</span>
+            <span class="shape-tag-pill">Premiere Pro</span>
+          </div>
+          <code class="text-xs font-mono text-slate-400">rounded-full border-2 border-white/85</code>
+        </div>
+
+        <!-- View Button -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-3xl text-white space-y-6 flex flex-col justify-between items-center text-center">
+          <div>
+            <span class="text-xs font-mono text-slate-400">View Button</span>
+            <p class="text-sm text-slate-300 mt-1">180px circle, gentle 2.8s pulse, hover 1.12 scale</p>
+          </div>
+          <div class="py-4">
+            <div class="shape-view-btn flex items-center justify-center font-medium text-xl shadow-2xl hover:scale-110 transition-transform cursor-pointer">
+              View
+            </div>
+          </div>
+          <code class="text-xs font-mono text-slate-400">w-[180px] h-[180px] rounded-full</code>
+        </div>
+
+        <!-- Contact Button -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-3xl text-white space-y-6 flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-mono text-slate-400">Contact Button</span>
+            <p class="text-sm text-slate-300 mt-1">104px height white pill, arrow slides on hover</p>
+          </div>
+          <div class="py-4 flex justify-center">
+            <button class="shape-contact-btn flex items-center justify-center font-medium text-xl shadow-2xl hover:scale-105 transition-transform group">
+              Contact Us <span class="ml-2 group-hover:translate-x-2 transition-transform">-></span>
+            </button>
+          </div>
+          <code class="text-xs font-mono text-slate-400">h-[104px] px-12 rounded-full</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-[#CDCDD0] pt-8 flex items-center justify-between text-xs font-mono text-[#484A52]">
+      <span>Khalid Portfolio Design System &bull; Version 1.0.0</span>
+      <span>Verified across 1366, 1536 & 1920 viewports</span>
+    </footer>
+  </body>
+</html>

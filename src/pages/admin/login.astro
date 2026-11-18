@@ -1,0 +1,103 @@
+---
+import '../../styles/global.css';
+
+// If already logged in, redirect to dashboard
+if (Astro.locals.user) {
+  return Astro.redirect('/admin/dashboard');
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login | Khalid Portfolio</title>
+  </head>
+  <body class="min-h-screen bg-[#FCFCFC] text-[#101014] flex flex-col items-center justify-center p-4 antialiased selection:bg-[#101014] selection:text-white">
+    <!-- Top Brand Backlink -->
+    <div class="mb-8 text-center">
+      <a href="/" class="text-xs font-bold tracking-widest uppercase text-[#101014] hover:opacity-60 transition">
+        ← Back to Portfolio
+      </a>
+    </div>
+
+    <!-- Black Card Section on White Page -->
+    <div class="w-full max-w-md p-8 md:p-10 bg-[#101014] text-white rounded-3xl border border-neutral-800 shadow-2xl space-y-6">
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white text-[#101014] font-extrabold text-lg tracking-tight mb-2">
+          K
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-white">Admin Control Center</h1>
+        <p class="text-xs text-neutral-400">Sign in with your verified master credentials</p>
+      </div>
+
+      <form id="login-form" class="space-y-4 pt-2">
+        <div>
+          <label class="block text-[11px] font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            required
+            class="w-full px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white text-sm transition"
+            placeholder="admin@khalid.dev"
+          />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">Password</label>
+          <input
+            id="password"
+            type="password"
+            required
+            class="w-full px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white text-sm transition"
+            placeholder="••••••••••••"
+          />
+        </div>
+
+        <div id="error-message" class="hidden p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-200 text-xs font-medium"></div>
+
+        <button
+          type="submit"
+          class="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-[#101014] font-bold text-sm transition shadow-lg cursor-pointer"
+        >
+          Sign In to Console
+        </button>
+      </form>
+    </div>
+  </body>
+</html>
+
+    <script>
+      const form = document.getElementById('login-form') as HTMLFormElement;
+      const errorDiv = document.getElementById('error-message') as HTMLDivElement;
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorDiv.classList.add('hidden');
+        errorDiv.textContent = '';
+
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+        const password = (document.getElementById('password') as HTMLInputElement).value;
+
+        try {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            window.location.href = '/admin/dashboard';
+          } else {
+            errorDiv.textContent = data.error?.message || 'Login failed';
+            errorDiv.classList.remove('hidden');
+          }
+        } catch {
+          errorDiv.textContent = 'Network error while attempting to log in';
+          errorDiv.classList.remove('hidden');
+        }
+      });
+    </script>
+  </body>
+</html>

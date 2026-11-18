@@ -1,0 +1,39 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const upperTitle = title.toUpperCase();
+const textLen = upperTitle.length;
+const viewBoxWidth = Math.max(1600, Math.ceil(textLen * 115 + 400));
+---
+
+<div
+  class="section-heading-band w-full h-[40vh] md:h-[48vh] min-h-[260px] md:min-h-[360px] max-h-[540px] bg-[#FCFCFC] flex items-center justify-center px-4 md:px-8 lg:px-[clamp(2rem,3.75vw,4.5rem)] overflow-hidden select-none shrink-0 border-b border-[#CDCDD0]"
+  data-tone="light"
+>
+  <div class="w-full flex items-center justify-center h-full">
+    <svg
+      class="w-full h-full max-h-[36vh] md:max-h-[42vh] select-none pointer-events-none"
+      viewBox={`0 0 ${viewBoxWidth} 260`}
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+    >
+      <text
+        x="50%"
+        y="58%"
+        dominant-baseline="middle"
+        text-anchor="middle"
+        fill="#101014"
+        font-size="180"
+        font-weight="700"
+        letter-spacing="-0.03em"
+        font-family="'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+      >
+        {upperTitle}
+      </text>
+    </svg>
+    <h2 class="sr-only">{title}</h2>
+  </div>
+</div>

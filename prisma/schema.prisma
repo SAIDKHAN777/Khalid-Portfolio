@@ -1,0 +1,413 @@
+// Prisma Schema for Khalid Portfolio
+// Target Database: Cloudflare D1 (SQLite)
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  SPAM
+}
+
+enum MediaType {
+  IMAGE
+  PDF
+  OTHER
+}
+
+enum ClickType {
+  LIVE
+  GITHUB
+  DETAILS
+}
+
+enum WorkMediaType {
+  IMAGE
+  VIDEO
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  name             String?
+  role             Role      @default(ADMIN)
+  lastLoginAt      DateTime?
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  sessions         Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+
+  @@map("categories")
+}
+
+model Project {
+  id               String         @id @default(cuid())
+  title            String
+  slug             String         @unique
+  shortDescription String
+  fullDescription  String?
+  thumbnailUrl     String?
+  images           String         @default("[]")
+  techStack        String         @default("[]")
+  liveUrl          String?
+  githubUrl        String?
+  categoryId       String?
+  category         Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  isFeatured       Boolean        @default(false)
+  order            Int            @default(0)
+  status           ContentStatus  @default(DRAFT)
+  publishedAt      DateTime?
+  deletedAt        DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  clicks           ProjectClick[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([order])
+  @@index([categoryId])
+  @@map("projects")
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  posts     BlogPost[]
+
+  @@map("tags")
+}
+
+model BlogPost {
+  id             String        @id @default(cuid())
+  title          String
+  slug           String        @unique
+  excerpt        String
+  content        String
+  coverImageUrl  String?
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  readingTime    Int           @default(1)
+  viewCount      Int           @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  tags           Tag[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@map("blog_posts")
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String
+  level     Int      @default(80)
+  category  String
+  icon      String?
+  order     Int      @default(0)
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([order])
+  @@map("skills")
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  order       Int      @default(0)
+  sectionId   String?
+  section     Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  isVisible   Boolean  @default(true)
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([order])
+  @@index([sectionId])
+  @@map("services")
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  title       String
+  company     String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([order])
+  @@map("experiences")
+}
+
+model Education {
+  id          String    @id @default(cuid())
+  degree      String
+  institute   String
+  startDate   DateTime
+  endDate     DateTime?
+  description String?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([order])
+  @@map("educations")
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  clientName String
+  clientRole String
+  company    String?
+  message    String
+  avatarUrl  String?
+  rating     Int      @default(5)
+  isApproved Boolean  @default(false)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isApproved])
+  @@index([order])
+  @@map("testimonials")
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    MessageStatus @default(NEW)
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+model Media {
+  id        String    @id @default(cuid())
+  url       String
+  publicId  String    @unique
+  type      MediaType @default(IMAGE)
+  mimeType  String
+  size      Int
+  width     Int?
+  height    Int?
+  alt       String?
+  folder    String?   @default("portfolio")
+  data      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([publicId])
+  @@index([type])
+  @@map("media")
+}
+
+model SiteSetting {
+  id                    String   @id @default("default")
+  heroTitle             String   @default("AI Engineer & Creative Technologist")
+  heroSubtitle          String?
+  bio                   String?
+  email                 String   @default("contact@khalid.dev")
+  phone                 String?
+  location              String?  @default("Dhaka, Bangladesh")
+  socialLinks           Json?
+  resumeUrl             String?
+  defaultSeoTitle       String   @default("Khalid | AI Engineer & Full Stack Developer")
+  defaultSeoDescription String   @default("Personal portfolio, creative motion works, and technical articles by Khalid.")
+  defaultOgImage        String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model PageView {
+  id          String   @id @default(cuid())
+  path        String
+  referrer    String?
+  country     String?
+  device      String?
+  visitorHash String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([path, createdAt])
+  @@map("page_views")
+}
+
+model ProjectClick {
+  id        String    @id @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type      ClickType
+  createdAt DateTime  @default(now())
+
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("project_clicks")
+}
+
+model ResumeDownload {
+  id          String   @id @default(cuid())
+  visitorHash String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("resume_downloads")
+}
+
+model Section {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  title     String
+  order     Int       @default(0)
+  isVisible Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  services  Service[]
+  works     Work[]
+
+  @@index([order])
+  @@index([slug])
+  @@map("portfolio_sections")
+}
+
+model Work {
+  id             String        @id @default(cuid())
+  sectionId      String
+  section        Section       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  title          String
+  subtitle       String?
+  tags           String        @default("[]")
+  mediaType      WorkMediaType @default(IMAGE)
+  mediaUrl       String?
+  posterUrl      String?
+  fallbackColorA String        @default("#181824")
+  fallbackColorB String        @default("#252538")
+  focalX         Float         @default(50)
+  focalY         Float         @default(50)
+  altText        String?
+  linkLabel      String        @default("View")
+  linkUrl        String?
+  order          Int           @default(0)
+  isPublished    Boolean       @default(true)
+  isPinned       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([sectionId])
+  @@index([order])
+  @@index([isPublished])
+  @@index([isPinned])
+  @@map("works")
+}
+
+model SiteSettings {
+  id                 String   @id @default("default")
+  heroGreeting       String   @default("Hello")
+  heroIntro          String   @default("My name is Khalid. I work as an AI Engineer, AI Automation Expert and Full Stack Developer, building software apps, backend systems, AI platforms and personal AI agents.")
+  heroPhotoUrl       String?
+  ownerName          String   @default("Khalid")
+  aboutTitle         String   @default("About Khalid")
+  aboutBio           String?
+  aboutBioParagraph1 String   @default("I am Khalid, an AI Engineer, Creative Motion Technologist, and Full Stack Developer. Over the past several years, I have worked across the convergence of engineering rigour and cinematic media production—building intelligent software systems, resilient backend architectures, and high-retention digital media for modern brands and platforms worldwide.")
+  aboutBioParagraph2 String   @default("My work centres on turning complex creative visions into seamless, high-performance digital experiences. Whether architecting autonomous AI agent pipelines, engineering buttery 60fps interactive web portfolios, or directing commercial video edits and brand identities, I treat every project with extreme precision, narrative rhythm, and uncompromising craft.")
+  aboutBioParagraph3 String   @default("I believe technology should elevate human storytelling, not distract from it. From raw system design to the final rendered frame, my focus is always on delivering measurable business impact and memorable visual delight.")
+  socialProfiles     Json?
+  aboutYoutubeUrl    String   @default("https://youtube.com")
+  aboutFacebookUrl   String   @default("https://facebook.com")
+  aboutLinkedinUrl   String   @default("https://linkedin.com")
+  aboutGithubUrl     String   @default("https://github.com")
+  aboutXUrl          String   @default("https://x.com")
+  footerHeadline     String   @default("Connect with us")
+  footerSubline      String   @default("Have a project in mind? Let's make it happen.")
+  contactButtonLabel String   @default("Contact Us ->")
+  contactUrl         String   @default("mailto:contact@khalid.dev")
+  footerCopyright    String   @default("© 2026 Khalid. All rights reserved.")
+  seoTitle           String   @default("Khalid | AI Engineer & Full Stack Developer")
+  seoDescription     String   @default("Personal portfolio of Khalid - AI Engineer, AI Automation Expert and Full Stack Developer.")
+  ogImageUrl         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("site_settings_v2")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admin_users")
+}

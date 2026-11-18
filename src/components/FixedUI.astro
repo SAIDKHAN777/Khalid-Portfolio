@@ -1,0 +1,69 @@
+---
+interface Props {
+  ownerName?: string;
+  activeSection?: string;
+  counter?: string;
+  tone?: 'light' | 'dark';
+}
+
+const {
+  ownerName = 'Khalid',
+  activeSection = 'Video Editing',
+  counter = '01 / 02',
+  tone = 'dark',
+} = Astro.props;
+---
+
+<div id="fixed-ui" class="pointer-events-none fixed inset-0 z-40 select-none">
+  <!-- Bottom bar completely removed per user request for a 100% clean bottom area -->
+
+  <!-- Media Lightbox Modal -->
+  <dialog
+    id="media-lightbox"
+    class="pointer-events-auto backdrop:bg-black/85 backdrop:backdrop-blur-md bg-transparent p-0 m-auto max-w-4xl w-full border-0 focus:outline-none"
+  >
+    <div class="relative bg-[#101014] text-white rounded-2xl overflow-hidden shadow-2xl border border-white/10 p-6 md:p-8">
+      <button
+        id="lightbox-close"
+        class="absolute top-4 right-4 text-white/70 hover:text-white p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+        aria-label="Close Lightbox"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div
+        id="lightbox-media-container"
+        class="aspect-video w-full rounded-xl overflow-hidden bg-black/60 flex items-center justify-center border border-white/5"
+      >
+        <!-- Injected via motion.ts on View click -->
+      </div>
+
+      <div class="pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h4 id="lightbox-title" class="text-2xl font-bold tracking-tight"></h4>
+          <p id="lightbox-section" class="text-sm text-slate-400 font-mono mt-1"></p>
+        </div>
+        <a
+          id="lightbox-link"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="shape-tag-pill border-2 border-white/40 hover:bg-white hover:text-black transition-colors self-start md:self-center"
+        >
+          Open External Project →
+        </a>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<style>
+  #bottom-bar[data-tone="light"] {
+    color: #101014;
+  }
+  #bottom-bar[data-tone="dark"] {
+    color: #FFFFFF;
+  }
+</style>

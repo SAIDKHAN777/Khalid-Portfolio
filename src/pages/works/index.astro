@@ -1,0 +1,109 @@
+---
+import '../../styles/global.css';
+import Topbar from '../../components/Topbar.astro';
+import { getPortfolioData } from '../../lib/public-data';
+
+export const prerender = false;
+
+const defaultWorks = [
+  { title: 'Video Editing', slug: 'video-editing' },
+  { title: 'Graphic Design', slug: 'graphic-design' },
+  { title: 'Motion Graphics', slug: 'motion-graphics' },
+  { title: 'Digital Marketing', slug: 'digital-marketing' },
+];
+
+const { services = [], settings = {} } = await getPortfolioData({ pinnedOnly: false });
+
+function getSlug(title: string): string {
+  const lower = title.toLowerCase();
+  if (lower.includes('video')) return 'video-editing';
+  if (lower.includes('graphic design') || lower.includes('graphic designing')) return 'graphic-design';
+  if (lower.includes('motion')) return 'motion-graphics';
+  if (lower.includes('marketing')) return 'digital-marketing';
+  return lower.replace(/\s+/g, '-');
+}
+
+const workItems = services && services.length > 0
+  ? services.map((s) => ({
+      title: s.title.toLowerCase().includes('motion') ? 'Motion Graphics' : s.title,
+      slug: getSlug(s.title),
+    }))
+  : defaultWorks;
+
+// Ensure all 4 core services are represented
+if (!workItems.some((w) => w.slug === 'digital-marketing')) {
+  workItems.push({ title: 'Digital Marketing', slug: 'digital-marketing' });
+}
+if (!workItems.some((w) => w.slug === 'video-editing')) {
+  workItems.unshift({ title: 'Video Editing', slug: 'video-editing' });
+}
+if (!workItems.some((w) => w.slug === 'graphic-design')) {
+  workItems.splice(1, 0, { title: 'Graphic Design', slug: 'graphic-design' });
+}
+if (!workItems.some((w) => w.slug === 'motion-graphics')) {
+  workItems.splice(2, 0, { title: 'Motion Graphics', slug: 'motion-graphics' });
+}
+
+// Remove duplicates by slug
+const uniqueWorks = workItems.filter(
+  (item, index, self) => index === self.findIndex((t) => t.slug === item.slug)
+);
+
+const brandName = settings?.ownerName || 'KHALID';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Works | {brandName}</title>
+    <meta
+      name="description"
+      content={`Selected works and client projects in Video Editing, Graphic Design, Motion Graphics, and Digital Marketing by ${brandName}.`}
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-[#FCFCFC] text-[#101014] antialiased selection:bg-[#101014] selection:text-white min-h-screen flex flex-col">
+    <!-- Topbar Navigation -->
+    <Topbar brandName={brandName} />
+
+    <!-- Back Button -->
+    <div class="w-full max-w-5xl mx-auto px-6 md:px-12 lg:px-16 pt-20 md:pt-24 select-none">
+      <a
+        href="/"
+        id="works-back-button"
+        class="inline-flex items-center gap-2 text-sm md:text-base font-semibold tracking-wide text-[#101014] hover:text-[#101014]/60 transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2 py-1 cursor-pointer"
+        aria-label="Back to Previous Page"
+        onclick="if (history.length > 1) { history.back(); return false; }"
+      >
+        <svg
+          class="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        <span>Back</span>
+      </a>
+    </div>
+
+    <!-- Main Content Area: Large Typography Categories -->
+    <main class="flex-1 w-full max-w-5xl mx-auto px-6 md:px-12 lg:px-16 flex flex-col justify-center py-12 md:py-20 select-none">
+      <nav class="space-y-6 md:space-y-8 my-auto w-full text-left" aria-label="Works Categories">
+        {uniqueWorks.map((item) => (
+          <div class="group flex items-baseline">
+            <a
+              href={`/services/${item.slug}`}
+              class="works-category-link text-[clamp(2.5rem,5.5vw,5.5rem)] font-bold tracking-tight text-[#101014] hover:text-[#101014]/60 hover:translate-x-3 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2 block"
+            >
+              {item.title}
+            </a>
+          </div>
+        ))}
+      </nav>
+    </main>
+  </body>
+</html>

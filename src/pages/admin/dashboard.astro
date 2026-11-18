@@ -1,0 +1,169 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { portfolioService } from '@/services/portfolio.service';
+
+export const prerender = false;
+
+const counts = await portfolioService.getDashboardCounts();
+const sections = await portfolioService.getSections();
+const recentWorks = await portfolioService.getWorks();
+const settings = await portfolioService.getSettings();
+---
+
+<AdminLayout title="Dashboard | Khalid Portfolio Admin" activeTab="dashboard">
+  <div class="space-y-8">
+    <!-- Top Welcome Banner (Black Section) -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#101014] text-white p-8 rounded-3xl border border-neutral-800 shadow-xl">
+      <div class="space-y-1">
+        <h1 class="text-3xl font-extrabold text-white tracking-tight">
+          Welcome back, {settings?.ownerName || 'Khalid'}
+        </h1>
+        <p class="text-xs md:text-sm text-neutral-400">
+          Everything on the public portfolio is driven dynamically from this console.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a
+          href="/admin/works"
+          class="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-xs font-bold text-[#101014] shadow transition flex items-center gap-2 cursor-pointer"
+        >
+          <span>+ Add New Work</span>
+        </a>
+        <a
+          href="/?preview=true"
+          target="_blank"
+          class="px-5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-xs font-bold text-white transition cursor-pointer"
+        >
+          Preview Site ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- Metric Cards (Black Sections) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-[#101014] text-white border border-neutral-800 p-6 rounded-2xl space-y-2 shadow-md">
+        <span class="text-xs font-mono text-neutral-400 uppercase tracking-wider">Total Works</span>
+        <div class="text-3xl font-extrabold text-white font-mono">{counts.worksCount}</div>
+        <p class="text-xs text-neutral-500">Showcase items in database</p>
+      </div>
+
+      <div class="bg-[#101014] text-white border border-neutral-800 p-6 rounded-2xl space-y-2 shadow-md">
+        <span class="text-xs font-mono text-neutral-400 uppercase tracking-wider">Pinned to Home</span>
+        <div class="text-3xl font-extrabold text-white font-mono">{counts.pinnedWorksCount}</div>
+        <p class="text-xs text-neutral-500">Featured in scroll panels</p>
+      </div>
+
+      <div class="bg-[#101014] text-white border border-neutral-800 p-6 rounded-2xl space-y-2 shadow-md">
+        <span class="text-xs font-mono text-neutral-400 uppercase tracking-wider">Published Works</span>
+        <div class="text-3xl font-extrabold text-white font-mono">{counts.publishedWorksCount}</div>
+        <p class="text-xs text-neutral-500">Active across site & services</p>
+      </div>
+
+      <div class="bg-[#101014] text-white border border-neutral-800 p-6 rounded-2xl space-y-2 shadow-md">
+        <span class="text-xs font-mono text-neutral-400 uppercase tracking-wider">Active Categories</span>
+        <div class="text-3xl font-extrabold text-white font-mono">4</div>
+        <p class="text-xs text-neutral-500">Fixed core creative tracks</p>
+      </div>
+    </div>
+
+    <!-- Quick Shortcuts Grid (Black Sections) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <a
+        href="/admin/settings"
+        class="group p-6 rounded-2xl bg-[#101014] text-white border border-neutral-800 hover:border-neutral-600 transition flex items-start gap-4 shadow-md"
+      >
+        <div class="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-700 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+          ✨
+        </div>
+        <div>
+          <h3 class="font-bold text-sm text-white group-hover:text-neutral-200 transition">Hero & About Settings</h3>
+          <p class="text-xs text-neutral-400 mt-1">Edit greeting, cut-out portrait, and expandable About Khalid bio content.</p>
+        </div>
+      </a>
+
+      <a
+        href="/admin/works"
+        class="group p-6 rounded-2xl bg-[#101014] text-white border border-neutral-800 hover:border-neutral-600 transition flex items-start gap-4 shadow-md"
+      >
+        <div class="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-700 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+          🎬
+        </div>
+        <div>
+          <h3 class="font-bold text-sm text-white group-hover:text-neutral-200 transition">Works Studio</h3>
+          <p class="text-xs text-neutral-400 mt-1">Upload media, set watch links, and toggle Pin to Home across 4 categories.</p>
+        </div>
+      </a>
+
+      <a
+        href="/admin/blog"
+        class="group p-6 rounded-2xl bg-[#101014] text-white border border-neutral-800 hover:border-neutral-600 transition flex items-start gap-4 shadow-md"
+      >
+        <div class="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-700 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+          📰
+        </div>
+        <div>
+          <h3 class="font-bold text-sm text-white group-hover:text-neutral-200 transition">Press & Articles</h3>
+          <p class="text-xs text-neutral-400 mt-1">Publish editorial thought-leadership and industry press features.</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Active Works Overview (Black Section) -->
+    <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Current Showcase Works</h2>
+          <p class="text-xs text-neutral-400">Total {recentWorks.length} projects configured across {sections.length} sections.</p>
+        </div>
+        <a href="/admin/works" class="text-xs font-bold text-white hover:underline">Manage All Works →</a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="border-b border-neutral-800 text-neutral-400 font-mono uppercase text-[11px]">
+            <tr>
+              <th class="pb-3">Title</th>
+              <th class="pb-3">Section</th>
+              <th class="pb-3">Media</th>
+              <th class="pb-3">Pinned</th>
+              <th class="pb-3">Tags</th>
+              <th class="pb-3">Order</th>
+              <th class="pb-3 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-800">
+            {recentWorks.slice(0, 8).map((w) => (
+              <tr class="hover:bg-neutral-900/50 transition">
+                <td class="py-3 font-semibold text-white">{w.title}</td>
+                <td class="py-3 text-neutral-400">{w.section?.title || 'Unassigned'}</td>
+                <td class="py-3 font-mono text-[11px] text-neutral-400">{w.mediaType}</td>
+                <td class="py-3">
+                  <span class={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    w.isPinned ? 'bg-white text-[#101014]' : 'bg-neutral-800 text-neutral-500'
+                  }`}>
+                    {w.isPinned ? '📌 Pinned' : 'Unpinned'}
+                  </span>
+                </td>
+                <td class="py-3">
+                  <div class="flex flex-wrap gap-1">
+                    {w.tags.slice(0, 2).map((t) => (
+                      <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-[10px] text-neutral-300 font-mono">{t}</span>
+                    ))}
+                  </div>
+                </td>
+                <td class="py-3 font-mono text-neutral-400">{w.order}</td>
+                <td class="py-3 text-right">
+                  <span class={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                    w.isPublished ? 'bg-white text-[#101014]' : 'bg-neutral-800 text-neutral-400 border border-neutral-700'
+                  }`}>
+                    {w.isPublished ? 'Published' : 'Draft'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AdminLayout>

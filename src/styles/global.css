@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-page-white: #fcfcfc;
+  --color-ink: #101014;
+  --color-body-grey: #484a52;
+  --color-divider: #cdcdd0;
+  --color-brand-white: #ffffff;
+  --color-footer-from: #0a0a0c;
+  --color-footer-to: #181022;
+
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+
+  --tracking-tight-headings: -0.03em;
+}
+
+:root {
+  /* Colors */
+  --page-white: #fcfcfc;
+  --ink: #101014;
+  --body-grey: #484a52;
+  --divider: #cdcdd0;
+  --white: #ffffff;
+  --footer-gradient: linear-gradient(180deg, #0a0a0c 0%, #181022 100%);
+
+  /* Typography Fluid Scales (1920x1080 Baseline) */
+  --font-hello: clamp(5rem, 13vw, 15.625rem); /* 250px at 1920px */
+  --font-service-title: clamp(2.5rem, 4.06vw, 4.875rem); /* 78px at 1920px */
+  --font-service-index: clamp(1rem, 1.15vw, 1.375rem); /* 22px at 1920px */
+  --font-panel-title: clamp(1.75rem, 2.29vw, 2.75rem); /* 44px at 1920px */
+  --font-tag-pill: clamp(0.875rem, 0.94vw, 1.125rem); /* 18px at 1920px */
+  --font-bottom-bar: clamp(1.25rem, 1.77vw, 2.125rem); /* 34px at 1920px */
+  --font-footer-sub: clamp(1.5rem, 2.08vw, 2.5rem); /* 40px at 1920px */
+
+  /* Spacing (1920x1080 Baseline) */
+  --page-margin-x: clamp(2rem, 3.75vw, 4.5rem); /* 64-72px at 1920px */
+  --heading-band-height: 48vh; /* ~520px at 1080px */
+  --panel-height: 100vh;
+
+  /* Shapes */
+  --view-btn-size: 180px;
+  --contact-btn-height: 104px;
+}
+
+/* Base resets & typography */
+body {
+  background-color: var(--page-white);
+  color: var(--ink);
+  font-family: var(--font-heading);
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tight tracking for giant display headings */
+.tracking-tight-display {
+  letter-spacing: -0.03em;
+}
+
+/* Soft Radial Lighten behind Portrait in Hero */
+.hero-portrait-radial {
+  background: radial-gradient(
+    circle at 60% 50%,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(252, 252, 252, 0) 70%
+  );
+}
+
+/* CSS Mask for Hero Portrait edge fading */
+.hero-portrait-mask {
+  mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+}
+
+@media (min-width: 768px) {
+  .hero-portrait-mask {
+    mask-image:
+      linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%),
+      linear-gradient(to bottom, black 70%, transparent 100%);
+    mask-composite: intersect;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%),
+      linear-gradient(to bottom, black 70%, transparent 100%);
+    -webkit-mask-composite: source-in;
+  }
+}
+
+/* Tag Pill Shape */
+.shape-tag-pill {
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  font-size: var(--font-tag-pill);
+  font-weight: 500;
+  padding: 0.35rem 1.25rem;
+}
+
+/* View Button Shape (120px on mobile, 180px on tablet/desktop) */
+.shape-view-btn {
+  width: 120px;
+  height: 120px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  color: #101014;
+}
+
+@media (min-width: 768px) {
+  .shape-view-btn {
+    width: var(--view-btn-size);
+    height: var(--view-btn-size);
+  }
+}
+
+/* Contact Button Shape */
+.shape-contact-btn {
+  height: 72px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  color: #101014;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+@media (min-width: 768px) {
+  .shape-contact-btn {
+    height: var(--contact-btn-height);
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}

@@ -1,0 +1,10 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import ProjectsManager from '@/components/admin/ProjectsManager';
+
+export const prerender = false;
+---
+
+<AdminLayout title="Manage Projects | Khalid Portfolio Admin" activeTab="projects">
+  <ProjectsManager client:load />
+</AdminLayout>

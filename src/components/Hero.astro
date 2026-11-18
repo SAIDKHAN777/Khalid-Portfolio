@@ -1,0 +1,53 @@
+---
+import SocialLinks, { type SocialProfileItem } from './SocialLinks.astro';
+
+interface Props {
+  greeting?: string;
+  intro?: string;
+  photoUrl?: string | null;
+  socialProfiles?: SocialProfileItem[];
+}
+
+const {
+  greeting = 'Hello',
+  intro = 'My name is Khalid. I work as an AI Engineer, AI Automation Expert and Full Stack Developer, building software apps, backend systems, AI platforms and personal AI agents.',
+  photoUrl = '/images/said-cutout.png',
+  socialProfiles = [],
+} = Astro.props;
+---
+
+<section
+  id="hero"
+  class="relative w-full min-h-screen md:h-screen md:min-h-[720px] bg-white flex items-center justify-between px-8 md:px-16 lg:px-24 pt-16 md:pt-16 pb-0 text-[#101014] overflow-hidden select-none"
+  data-tone="light"
+>
+  <div class="w-full max-w-7xl mx-auto flex-1 h-full flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 z-10">
+    <!-- Left Column: Hello, underline, and intro paragraph (Vertically centered) -->
+    <div class="w-full md:w-1/2 lg:w-[42%] flex flex-col justify-center my-auto z-10">
+      <h1 class="text-[clamp(4.5rem,10.5vw,9.5rem)] font-extrabold tracking-[-0.035em] text-[#111111] leading-[0.88]">
+        {greeting}
+      </h1>
+      <div class="w-14 h-[3.5px] bg-[#111111] mt-3.5 mb-6"></div>
+      <p class="text-[15px] md:text-base text-[#52525B] font-sans leading-[1.8] font-normal max-w-[390px]">
+        {intro}
+      </p>
+      {socialProfiles.length > 0 && (
+        <div id="hero-social-links" class="mt-6">
+          <SocialLinks profiles={socialProfiles} size="sm" />
+        </div>
+      )}
+    </div>
+
+    <!-- Right Column: Khalid's Cutout Portrait (Raised higher, nicely filling the height) -->
+    <div class="w-full md:w-1/2 lg:w-[58%] relative flex items-start md:items-start justify-center md:justify-end h-[55vh] md:h-full pt-4 md:pt-6 lg:pt-8">
+      {photoUrl && (
+        <img
+          src={photoUrl}
+          alt="Khalid"
+          class="w-auto h-full max-h-[88vh] lg:max-h-[92vh] max-w-full object-contain object-top pointer-events-none drop-shadow-sm"
+          loading="eager"
+        />
+      )}
+    </div>
+  </div>
+</section>

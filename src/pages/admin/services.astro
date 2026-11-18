@@ -1,0 +1,332 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { portfolioService } from '@/services/portfolio.service';
+
+export const prerender = false;
+
+const services = await portfolioService.getServices();
+const sections = await portfolioService.getSections();
+---
+
+<AdminLayout title="Services Manager | Admin" activeTab="services">
+  <div class="space-y-8 max-w-5xl">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-neutral-200 pb-6">
+      <div>
+        <h1 class="text-2xl font-extrabold text-[#101014] tracking-tight">Services List (01 - 04)</h1>
+        <p class="text-xs text-neutral-500 mt-1">
+          Manage numbered service rows, link services to showcase sections, and reorder.
+        </p>
+      </div>
+      <button
+        type="button"
+        id="open-add-modal-btn"
+        class="px-5 py-2.5 rounded-xl bg-[#101014] hover:bg-black text-xs font-bold text-white shadow transition cursor-pointer flex items-center gap-2"
+      >
+        <span>+ Add Service</span>
+      </button>
+    </div>
+
+    <!-- Services Table (Black Section) -->
+    <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl overflow-hidden shadow-xl">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-neutral-950/80 border-b border-neutral-800 text-neutral-400 font-mono uppercase text-[11px]">
+          <tr>
+            <th class="p-4 w-16">Index</th>
+            <th class="p-4">Title</th>
+            <th class="p-4">Linked Section</th>
+            <th class="p-4 text-center">Visibility</th>
+            <th class="p-4 text-center">Reorder</th>
+            <th class="p-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="services-tbody" class="divide-y divide-neutral-800">
+          {services.map((svc, idx) => (
+            <tr class="hover:bg-neutral-900/40 transition group" data-id={svc.id}>
+              <td class="p-4 font-mono font-bold text-neutral-400">
+                ({String(idx + 1).padStart(2, '0')})
+              </td>
+              <td class="p-4">
+                <span class="text-sm font-bold text-white service-title">{svc.title}</span>
+              </td>
+              <td class="p-4">
+                <span class="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-[11px] text-white font-mono">
+                  {svc.section?.title || 'None (General Service)'}
+                </span>
+              </td>
+              <td class="p-4 text-center">
+                <button
+                  type="button"
+                  class="toggle-visibility-btn px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition"
+                  data-id={svc.id}
+                  data-visible={String(svc.isVisible)}
+                >
+                  <span class={svc.isVisible ? 'text-[#101014] bg-white px-2.5 py-0.5 rounded-full font-bold' : 'text-neutral-400 bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded-full'}>
+                    {svc.isVisible ? 'Visible' : 'Hidden'}
+                  </span>
+                </button>
+              </td>
+              <td class="p-4 text-center">
+                <div class="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="move-btn p-1.5 rounded bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                    data-id={svc.id}
+                    data-dir="up"
+                    disabled={idx === 0}
+                    title="Move Up"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    class="move-btn p-1.5 rounded bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                    data-id={svc.id}
+                    data-dir="down"
+                    disabled={idx === services.length - 1}
+                    title="Move Down"
+                  >
+                    ▼
+                  </button>
+                </div>
+              </td>
+              <td class="p-4 text-right">
+                <div class="inline-flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="edit-service-btn px-3 py-1 rounded-lg bg-white hover:bg-neutral-200 text-[#101014] font-bold text-xs cursor-pointer transition shadow-sm"
+                    data-id={svc.id}
+                    data-title={svc.title}
+                    data-section-id={svc.sectionId || ''}
+                    data-is-visible={String(svc.isVisible)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="delete-service-btn px-3 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-red-400 text-xs cursor-pointer transition"
+                    data-id={svc.id}
+                    data-title={svc.title}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal for Add / Edit Service (Black Modal) -->
+    <div id="service-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl p-6 md:p-8 max-w-md w-full space-y-6 shadow-2xl">
+        <h3 id="modal-title" class="text-lg font-bold text-white">Add New Service</h3>
+        <form id="service-form" class="space-y-4">
+          <input type="hidden" id="service-id-input" />
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Service Title</label>
+            <input
+              type="text"
+              id="service-title-input"
+              required
+              placeholder="e.g. Video Editing, Motion Graphic"
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Link to Portfolio Section (Optional)</label>
+            <select
+              id="service-section-input"
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
+            >
+              <option value="">None (Unlinked)</option>
+              {sections.map((sec) => (
+                <option value={sec.id}>{sec.title} ({sec.slug})</option>
+              ))}
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 pt-2">
+            <input type="checkbox" id="service-visible-input" checked class="rounded bg-neutral-900 border-neutral-700 text-white focus:ring-0" />
+            <label for="service-visible-input" class="text-xs text-neutral-300">Visible on public services list</label>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-neutral-800">
+            <button
+              type="button"
+              id="close-modal-btn"
+              class="px-4 py-2 rounded-xl bg-neutral-900 text-neutral-300 text-xs hover:bg-neutral-800 border border-neutral-700 cursor-pointer transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2 rounded-xl bg-white hover:bg-neutral-200 text-[#101014] text-xs font-bold shadow cursor-pointer transition"
+            >
+              Save Service
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('service-modal') as HTMLDivElement;
+    const form = document.getElementById('service-form') as HTMLFormElement;
+    const idInput = document.getElementById('service-id-input') as HTMLInputElement;
+    const titleInput = document.getElementById('service-title-input') as HTMLInputElement;
+    const sectionInput = document.getElementById('service-section-input') as HTMLSelectElement;
+    const visibleInput = document.getElementById('service-visible-input') as HTMLInputElement;
+    const modalTitle = document.getElementById('modal-title') as HTMLHeadingElement;
+
+    // Open Add Modal
+    document.getElementById('open-add-modal-btn')?.addEventListener('click', () => {
+      idInput.value = '';
+      titleInput.value = '';
+      sectionInput.value = '';
+      visibleInput.checked = true;
+      modalTitle.innerText = 'Add New Service';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+
+    // Close Modal
+    document.getElementById('close-modal-btn')?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+
+    // Edit Service
+    document.querySelectorAll('.edit-service-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id') || '';
+        const title = btn.getAttribute('data-title') || '';
+        const sectionId = btn.getAttribute('data-section-id') || '';
+        const isVisible = btn.getAttribute('data-is-visible') === 'true';
+
+        idInput.value = id;
+        titleInput.value = title;
+        sectionInput.value = sectionId;
+        visibleInput.checked = isVisible;
+        modalTitle.innerText = 'Edit Service';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+    });
+
+    // Delete Service
+    document.querySelectorAll('.delete-service-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const title = btn.getAttribute('data-title');
+        if (!confirm(`Are you sure you want to delete service "${title}"?`)) return;
+
+        try {
+          const res = await fetch(`/api/admin/portfolio/services?id=${id}`, { method: 'DELETE' });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast('Service deleted', 'success');
+            setTimeout(() => window.location.reload(), 500);
+          } else {
+            (window as any).showToast(result.error?.message || 'Delete failed', 'error');
+          }
+        } catch {
+          (window as any).showToast('Network error during delete', 'error');
+        }
+      });
+    });
+
+    // Toggle Visibility
+    document.querySelectorAll('.toggle-visibility-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const current = btn.getAttribute('data-visible') === 'true';
+        try {
+          const res = await fetch(`/api/admin/portfolio/services?id=${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isVisible: !current }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast(`Service ${!current ? 'Visible' : 'Hidden'}`, 'success');
+            setTimeout(() => window.location.reload(), 400);
+          }
+        } catch {
+          (window as any).showToast('Failed to toggle visibility', 'error');
+        }
+      });
+    });
+
+    // Reorder Handlers (Move Up / Down)
+    document.querySelectorAll('.move-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const tbody = document.getElementById('services-tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+        const id = btn.getAttribute('data-id');
+        const dir = btn.getAttribute('data-dir');
+        const currentIndex = rows.findIndex((r) => r.getAttribute('data-id') === id);
+        if (currentIndex === -1) return;
+
+        const targetIndex = dir === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (targetIndex < 0 || targetIndex >= rows.length) return;
+
+        // Swap IDs
+        const ids = rows.map((r) => r.getAttribute('data-id') as string);
+        const temp = ids[currentIndex];
+        ids[currentIndex] = ids[targetIndex];
+        ids[targetIndex] = temp;
+
+        try {
+          const res = await fetch('/api/admin/portfolio/services', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds: ids }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast('Services reordered', 'success');
+            setTimeout(() => window.location.reload(), 400);
+          }
+        } catch {
+          (window as any).showToast('Reorder failed', 'error');
+        }
+      });
+    });
+
+    // Save Form (Create or Edit)
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = idInput.value;
+      const isEdit = Boolean(id);
+      const payload = {
+        title: titleInput.value.trim(),
+        sectionId: sectionInput.value || null,
+        isVisible: visibleInput.checked,
+      };
+
+      try {
+        const url = isEdit ? `/api/admin/portfolio/services?id=${id}` : '/api/admin/portfolio/services';
+        const method = isEdit ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (result.success) {
+          (window as any).showToast(`Service ${isEdit ? 'updated' : 'created'} successfully!`, 'success');
+          setTimeout(() => window.location.reload(), 500);
+        } else {
+          (window as any).showToast(result.error?.message || 'Save failed', 'error');
+        }
+      } catch {
+        (window as any).showToast('Network error while saving', 'error');
+      }
+    });
+  </script>
+</AdminLayout>

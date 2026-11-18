@@ -1,0 +1,346 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { portfolioService } from '@/services/portfolio.service';
+
+export const prerender = false;
+
+const sections = await portfolioService.getSections();
+---
+
+<AdminLayout title="Sections Studio | Admin" activeTab="sections">
+  <div class="space-y-8 max-w-5xl">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-neutral-200 pb-6">
+      <div>
+        <h1 class="text-2xl font-extrabold text-[#101014] tracking-tight">Sections Studio</h1>
+        <p class="text-xs text-neutral-500 mt-1">
+          These section titles directly feed the 48vh giant heading bands and the persistent bottom bar.
+        </p>
+      </div>
+      <button
+        type="button"
+        id="open-add-modal-btn"
+        class="px-5 py-2.5 rounded-xl bg-[#101014] hover:bg-black text-xs font-bold text-white shadow transition cursor-pointer flex items-center gap-2"
+      >
+        <span>+ Add Section</span>
+      </button>
+    </div>
+
+    <!-- Sections Table (Black Section) -->
+    <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl overflow-hidden shadow-xl">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-neutral-950/80 border-b border-neutral-800 text-neutral-400 font-mono uppercase text-[11px]">
+          <tr>
+            <th class="p-4 w-16">Order</th>
+            <th class="p-4">Giant Heading Title</th>
+            <th class="p-4">Slug / Anchor</th>
+            <th class="p-4 text-center">Projects Count</th>
+            <th class="p-4 text-center">Visibility</th>
+            <th class="p-4 text-center">Reorder</th>
+            <th class="p-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="sections-tbody" class="divide-y divide-neutral-800">
+          {sections.map((sec, idx) => (
+            <tr class="hover:bg-neutral-900/40 transition group" data-id={sec.id}>
+              <td class="p-4 font-mono font-bold text-neutral-400">
+                0{idx + 1}
+              </td>
+              <td class="p-4">
+                <span class="text-sm font-bold text-white uppercase tracking-tight">{sec.title}</span>
+              </td>
+              <td class="p-4">
+                <code class="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-[11px] text-white font-mono">
+                  #{sec.slug}
+                </code>
+              </td>
+              <td class="p-4 text-center">
+                <span class="px-2.5 py-0.5 rounded-full bg-neutral-900 border border-neutral-700 text-xs text-neutral-300 font-mono">
+                  {sec._count?.works || 0} works
+                </span>
+              </td>
+              <td class="p-4 text-center">
+                <button
+                  type="button"
+                  class="toggle-visibility-btn px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition"
+                  data-id={sec.id}
+                  data-visible={String(sec.isVisible)}
+                >
+                  <span class={sec.isVisible ? 'text-[#101014] bg-white px-2.5 py-0.5 rounded-full font-bold' : 'text-neutral-400 bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded-full'}>
+                    {sec.isVisible ? 'Visible' : 'Hidden'}
+                  </span>
+                </button>
+              </td>
+              <td class="p-4 text-center">
+                <div class="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="move-btn p-1.5 rounded bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                    data-id={sec.id}
+                    data-dir="up"
+                    disabled={idx === 0}
+                    title="Move Up"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    class="move-btn p-1.5 rounded bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                    data-id={sec.id}
+                    data-dir="down"
+                    disabled={idx === sections.length - 1}
+                    title="Move Down"
+                  >
+                    ▼
+                  </button>
+                </div>
+              </td>
+              <td class="p-4 text-right">
+                <div class="inline-flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="edit-section-btn px-3 py-1 rounded-lg bg-white hover:bg-neutral-200 text-[#101014] font-bold text-xs cursor-pointer transition shadow-sm"
+                    data-id={sec.id}
+                    data-title={sec.title}
+                    data-slug={sec.slug}
+                    data-is-visible={String(sec.isVisible)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="delete-section-btn px-3 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-red-400 text-xs cursor-pointer transition"
+                    data-id={sec.id}
+                    data-title={sec.title}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal for Add / Edit Section (Black Modal) -->
+    <div id="section-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl p-6 md:p-8 max-w-md w-full space-y-6 shadow-2xl">
+        <h3 id="modal-title" class="text-lg font-bold text-white">Add New Section</h3>
+        <form id="section-form" class="space-y-4">
+          <input type="hidden" id="section-id-input" />
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Section Title (Shown in Giant Band)</label>
+            <input
+              type="text"
+              id="section-title-input"
+              required
+              placeholder="e.g. Video Editing, Graphic Design"
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Slug (URL Anchor & ID)</label>
+            <input
+              type="text"
+              id="section-slug-input"
+              required
+              placeholder="e.g. video-editing"
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white font-mono"
+            />
+          </div>
+
+          <div class="flex items-center gap-2 pt-2">
+            <input type="checkbox" id="section-visible-input" checked class="rounded bg-neutral-900 border-neutral-700 text-white focus:ring-0" />
+            <label for="section-visible-input" class="text-xs text-neutral-300">Visible on public portfolio</label>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-neutral-800">
+            <button
+              type="button"
+              id="close-modal-btn"
+              class="px-4 py-2 rounded-xl bg-neutral-900 text-neutral-300 text-xs hover:bg-neutral-800 border border-neutral-700 cursor-pointer transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2 rounded-xl bg-white hover:bg-neutral-200 text-[#101014] text-xs font-bold shadow cursor-pointer transition"
+            >
+              Save Section
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('section-modal') as HTMLDivElement;
+    const form = document.getElementById('section-form') as HTMLFormElement;
+    const idInput = document.getElementById('section-id-input') as HTMLInputElement;
+    const titleInput = document.getElementById('section-title-input') as HTMLInputElement;
+    const slugInput = document.getElementById('section-slug-input') as HTMLInputElement;
+    const visibleInput = document.getElementById('section-visible-input') as HTMLInputElement;
+    const modalTitle = document.getElementById('modal-title') as HTMLHeadingElement;
+
+    // Auto generate slug from title on input
+    titleInput?.addEventListener('input', () => {
+      if (!idInput.value) {
+        slugInput.value = titleInput.value
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+    });
+
+    // Open Add Modal
+    document.getElementById('open-add-modal-btn')?.addEventListener('click', () => {
+      idInput.value = '';
+      titleInput.value = '';
+      slugInput.value = '';
+      visibleInput.checked = true;
+      modalTitle.innerText = 'Add New Section';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+
+    // Close Modal
+    document.getElementById('close-modal-btn')?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+
+    // Edit Section
+    document.querySelectorAll('.edit-section-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id') || '';
+        const title = btn.getAttribute('data-title') || '';
+        const slug = btn.getAttribute('data-slug') || '';
+        const isVisible = btn.getAttribute('data-is-visible') === 'true';
+
+        idInput.value = id;
+        titleInput.value = title;
+        slugInput.value = slug;
+        visibleInput.checked = isVisible;
+        modalTitle.innerText = 'Edit Section';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+    });
+
+    // Delete Section
+    document.querySelectorAll('.delete-section-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const title = btn.getAttribute('data-title');
+        if (!confirm(`Are you sure you want to delete section "${title}"? All works inside this section will also be deleted!`)) return;
+
+        try {
+          const res = await fetch(`/api/admin/portfolio/sections?id=${id}`, { method: 'DELETE' });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast('Section deleted', 'success');
+            setTimeout(() => window.location.reload(), 500);
+          } else {
+            (window as any).showToast(result.error?.message || 'Delete failed', 'error');
+          }
+        } catch {
+          (window as any).showToast('Network error during delete', 'error');
+        }
+      });
+    });
+
+    // Toggle Visibility
+    document.querySelectorAll('.toggle-visibility-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const current = btn.getAttribute('data-visible') === 'true';
+        try {
+          const res = await fetch(`/api/admin/portfolio/sections?id=${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isVisible: !current }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast(`Section ${!current ? 'Visible' : 'Hidden'}`, 'success');
+            setTimeout(() => window.location.reload(), 400);
+          }
+        } catch {
+          (window as any).showToast('Failed to toggle visibility', 'error');
+        }
+      });
+    });
+
+    // Reorder Handlers (Move Up / Down)
+    document.querySelectorAll('.move-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const tbody = document.getElementById('sections-tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+        const id = btn.getAttribute('data-id');
+        const dir = btn.getAttribute('data-dir');
+        const currentIndex = rows.findIndex((r) => r.getAttribute('data-id') === id);
+        if (currentIndex === -1) return;
+
+        const targetIndex = dir === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (targetIndex < 0 || targetIndex >= rows.length) return;
+
+        // Swap IDs
+        const ids = rows.map((r) => r.getAttribute('data-id') as string);
+        const temp = ids[currentIndex];
+        ids[currentIndex] = ids[targetIndex];
+        ids[targetIndex] = temp;
+
+        try {
+          const res = await fetch('/api/admin/portfolio/sections', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds: ids }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast('Sections reordered', 'success');
+            setTimeout(() => window.location.reload(), 400);
+          }
+        } catch {
+          (window as any).showToast('Reorder failed', 'error');
+        }
+      });
+    });
+
+    // Save Form (Create or Edit)
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = idInput.value;
+      const isEdit = Boolean(id);
+      const payload = {
+        title: titleInput.value.trim(),
+        slug: slugInput.value.trim().toLowerCase(),
+        isVisible: visibleInput.checked,
+      };
+
+      try {
+        const url = isEdit ? `/api/admin/portfolio/sections?id=${id}` : '/api/admin/portfolio/sections';
+        const method = isEdit ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (result.success) {
+          (window as any).showToast(`Section ${isEdit ? 'updated' : 'created'} successfully!`, 'success');
+          setTimeout(() => window.location.reload(), 500);
+        } else {
+          (window as any).showToast(result.error?.message || 'Save failed', 'error');
+        }
+      } catch {
+        (window as any).showToast('Network error while saving', 'error');
+      }
+    });
+  </script>
+</AdminLayout>

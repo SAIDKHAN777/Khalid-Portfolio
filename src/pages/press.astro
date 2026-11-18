@@ -1,0 +1,151 @@
+---
+import '../styles/global.css';
+import Topbar from '../components/Topbar.astro';
+import prisma from '../lib/db';
+
+export const prerender = false;
+
+const displayTitle = 'PRESS';
+const textLen = displayTitle.length;
+const viewBoxWidth = Math.max(1600, Math.ceil(textLen * 115 + 400));
+
+const posts = await prisma.blogPost.findMany({
+  where: {
+    status: 'PUBLISHED',
+    deletedAt: null,
+  },
+  orderBy: [
+    { publishedAt: 'desc' },
+    { createdAt: 'desc' },
+  ],
+});
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PRESS | Khalid</title>
+    <meta name="description" content="Press releases, articles, and publications by Khalid." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-[#FCFCFC] text-[#101014] antialiased selection:bg-[#101014] selection:text-white min-h-screen flex flex-col">
+    <!-- Topbar Navigation -->
+    <Topbar brandName="KHALID" />
+
+    <!-- Back Button to return to previous session -->
+    <div class="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pt-20 md:pt-24 select-none">
+      <a
+        href="/"
+        id="press-back-button"
+        class="inline-flex items-center gap-2 text-sm md:text-base font-semibold tracking-wide text-[#101014] hover:text-[#101014]/60 transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2 py-1 cursor-pointer"
+        aria-label="Back to Previous Session"
+        onclick="if (history.length > 1) { history.back(); return false; }"
+      >
+        <svg
+          class="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        <span>Back</span>
+      </a>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full flex flex-col items-center justify-start pt-8 md:pt-12 pb-24">
+      <!-- Giant Headline Band -->
+      <div
+        class="section-heading-band w-full h-[32vh] md:h-[40vh] min-h-[200px] md:min-h-[280px] max-h-[420px] bg-[#FCFCFC] flex items-center justify-center px-4 md:px-8 lg:px-[clamp(2rem,3.75vw,4.5rem)] overflow-hidden select-none shrink-0"
+        data-tone="light"
+      >
+        <div class="w-full flex items-center justify-center h-full">
+          <svg
+            class="w-full h-full max-h-[30vh] md:max-h-[36vh] select-none pointer-events-none"
+            viewBox={`0 0 ${viewBoxWidth} 260`}
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden="true"
+          >
+            <text
+              x="50%"
+              y="58%"
+              dominant-baseline="middle"
+              text-anchor="middle"
+              fill="#101014"
+              font-size="180"
+              font-weight="700"
+              letter-spacing="-0.03em"
+              font-family="'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+            >
+              {displayTitle}
+            </text>
+          </svg>
+          <h1 class="sr-only">{displayTitle}</h1>
+        </div>
+      </div>
+
+      <!-- Press Articles Grid (9:16 Portrait Aspect Ratio with Text Overlay on Image) -->
+      <div class="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mt-8">
+        {posts.length === 0 ? (
+          <div class="text-center py-20">
+            <p class="text-sm text-neutral-500 font-mono">No press articles published yet.</p>
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            {posts.map((post) => (
+              <a
+                href={`/press/${post.slug}`}
+                class="group relative block aspect-[9/16] w-full rounded-3xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-xl hover:shadow-2xl hover:border-neutral-700 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+              >
+                <!-- 1. Portrait Thumbnail Picture (9:16) -->
+                <div class="absolute inset-0 w-full h-full overflow-hidden">
+                  {post.coverImageUrl ? (
+                    <img
+                      src={post.coverImageUrl}
+                      alt={post.title}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                  ) : (
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-900 to-neutral-950 text-neutral-500 font-mono text-xs">
+                      Press Image (9:16)
+                    </div>
+                  )}
+                </div>
+
+                <!-- 2. Dark Gradient Overlay for Contrast -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-opacity duration-300"></div>
+
+                <!-- 3. Top Tag Badge (Optional Clean Label) -->
+                <div class="absolute top-5 left-5 right-5 flex items-center justify-between pointer-events-none">
+                  <span class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-mono text-neutral-300 uppercase tracking-widest border border-white/10">
+                    Press
+                  </span>
+                  {post.publishedAt && (
+                    <span class="text-[10px] font-mono text-neutral-400 drop-shadow">
+                      {new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  )}
+                </div>
+
+                <!-- 4. Text Overlay ON TOP OF Picture (Not Below) -->
+                <div class="absolute bottom-0 inset-x-0 p-6 flex flex-col justify-end space-y-2 pointer-events-none">
+                  <h2 class="text-lg sm:text-xl font-bold text-white leading-snug line-clamp-3 group-hover:text-neutral-100 transition-colors drop-shadow-md">
+                    {post.title}
+                  </h2>
+                  <div class="flex items-center text-xs font-mono text-neutral-400 pt-1 group-hover:text-white transition-colors">
+                    <span>Read Article</span>
+                    <span class="ml-1 group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  </body>
+</html>

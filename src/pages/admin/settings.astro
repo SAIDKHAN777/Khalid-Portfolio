@@ -1,0 +1,477 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { portfolioService } from '@/services/portfolio.service';
+
+export const prerender = false;
+
+const settings = await portfolioService.getSettings();
+
+const defaultSocials = [
+  { id: '1', title: 'Facebook', url: settings?.aboutFacebookUrl || 'https://facebook.com', logoUrl: '' },
+  { id: '2', title: 'YouTube', url: settings?.aboutYoutubeUrl || 'https://youtube.com', logoUrl: '' },
+  { id: '3', title: 'LinkedIn', url: settings?.aboutLinkedinUrl || 'https://linkedin.com', logoUrl: '' },
+  { id: '4', title: 'GitHub', url: settings?.aboutGithubUrl || 'https://github.com', logoUrl: '' },
+  { id: '5', title: 'X', url: settings?.aboutXUrl || 'https://x.com', logoUrl: '' },
+];
+
+const initialSocials = Array.isArray(settings?.socialProfiles) && settings.socialProfiles.length > 0
+  ? settings.socialProfiles
+  : defaultSocials;
+---
+
+<AdminLayout title="Hero & About Settings | Admin" activeTab="settings">
+  <div class="space-y-8 max-w-4xl">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-neutral-200 pb-6">
+      <div>
+        <h1 class="text-2xl font-extrabold text-[#101014] tracking-tight">Hero & About Settings</h1>
+        <p class="text-xs text-neutral-500 mt-1">
+          Update homepage hero statement, cut-out portrait, About Khalid article, and separate Social Media profiles.
+        </p>
+      </div>
+      <button
+        type="button"
+        id="save-settings-btn"
+        class="px-6 py-2.5 rounded-xl bg-[#101014] hover:bg-black text-xs font-bold text-white shadow transition cursor-pointer flex items-center gap-2"
+      >
+        <span>Save All Settings</span>
+      </button>
+    </div>
+
+    <form id="settings-form" class="space-y-8">
+      <!-- 1. Hero Section -->
+      <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-white">Hero Section Configuration</h2>
+          <span class="text-[11px] font-mono text-neutral-400 uppercase tracking-wider">Homepage Banner</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Hero Greeting (Giant Heading)</label>
+            <input
+              type="text"
+              name="heroGreeting"
+              value={settings?.heroGreeting || 'Hello'}
+              required
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Owner Full Name</label>
+            <input
+              type="text"
+              name="ownerName"
+              value={settings?.ownerName || 'Khalid'}
+              required
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-neutral-300">Hero Intro Statement (Serif Paragraph)</label>
+          <textarea
+            name="heroIntro"
+            rows="3"
+            required
+            class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white leading-relaxed"
+          >{settings?.heroIntro || 'My name is Khalid. I work as an AI Engineer, AI Automation Expert and Full Stack Developer, building software apps, backend systems, AI platforms and personal AI agents.'}</textarea>
+        </div>
+
+        <!-- Portrait Upload & Preview -->
+        <div class="space-y-3 border-t border-neutral-800 pt-4">
+          <label class="block text-xs font-semibold text-neutral-300">
+            Portrait Cut-Out Photo (Transparent PNG/WebP)
+          </label>
+          <div class="flex items-center gap-6">
+            <div class="w-24 h-24 rounded-2xl bg-white border border-neutral-700 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+              <img
+                id="portrait-preview"
+                src={settings?.heroPhotoUrl || '/images/khalid-cutout.png'}
+                alt="Portrait Preview"
+                class="w-full h-full object-contain"
+                onerror="this.src='/images/said-cutout.png'"
+              />
+            </div>
+            <div class="space-y-2 flex-1">
+              <input type="hidden" name="heroPhotoUrl" id="heroPhotoUrl-input" value={settings?.heroPhotoUrl || '/images/khalid-cutout.png'} />
+              <input
+                type="file"
+                id="portrait-file-input"
+                accept="image/png,image/webp,image/jpeg"
+                class="block w-full text-xs text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-white file:text-[#101014] hover:file:bg-neutral-200 cursor-pointer"
+              />
+              <p class="text-[11px] text-neutral-400">
+                Processed automatically with Sharp into WebP/AVIF (max 2560px, EXIF metadata stripped).
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Collapsible About Section Accordion (Without Social Links) -->
+      <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl overflow-hidden shadow-xl transition-all duration-300">
+        <!-- Accordion Header Button with Arrow -->
+        <button
+          type="button"
+          id="toggle-about-accordion-btn"
+          class="w-full px-6 md:px-8 py-5 flex items-center justify-between text-left hover:bg-neutral-900/50 transition cursor-pointer select-none group focus:outline-none"
+          aria-expanded="false"
+          aria-controls="about-accordion-content"
+        >
+          <div>
+            <h2 class="text-base font-bold text-white group-hover:text-neutral-200 transition">
+              About Khalid Configuration (এবাউট পেজ সেটিংস)
+            </h2>
+            <p class="text-xs text-neutral-400 mt-0.5">
+              Click arrow to expand and edit bio paragraphs for /about page.
+            </p>
+          </div>
+          <!-- Animated Chevron Arrow -->
+          <div class="w-9 h-9 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center shrink-0 group-hover:bg-neutral-800 transition">
+            <svg
+              id="about-chevron"
+              class="w-5 h-5 text-white transition-transform duration-300 transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </button>
+
+        <!-- Accordion Body -->
+        <div
+          id="about-accordion-content"
+          class="hidden px-6 md:px-8 pb-8 pt-4 space-y-6 border-t border-neutral-800/80 bg-neutral-950/40"
+        >
+          <!-- 1. About Page Headline Title -->
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">About Page Headline Title (হেডলাইন টাইটেল)</label>
+            <input
+              type="text"
+              name="aboutTitle"
+              value={settings?.aboutTitle || 'About Khalid'}
+              required
+              placeholder="e.g. About Khalid"
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
+            />
+          </div>
+
+          <!-- 2. Single Bio Writing Box -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-semibold text-neutral-300">
+                Bio Description / Narrative (বায়ো লেখার লম্বা বক্স)
+              </label>
+              <span class="text-[11px] text-neutral-400 font-mono">২০০-৩০০ শব্দ বা যত ইচ্ছা</span>
+            </div>
+            <textarea
+              name="aboutBio"
+              rows="8"
+              placeholder="এখানে আপনার বায়ো সম্পর্কে ২০০-৩০০ ওয়ার্ড বা যতটুকু প্রয়োজন বিস্তারিত লিখুন..."
+              class="w-full px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white leading-relaxed font-sans"
+            >{settings?.aboutBio || [settings?.aboutBioParagraph1, settings?.aboutBioParagraph2, settings?.aboutBioParagraph3].filter(Boolean).join('\n\n')}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Separate Dedicated Social Media Profiles Section -->
+      <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Social Media Profiles (সোশ্যাল মিডিয়া সেটিংস)</h2>
+            <p class="text-xs text-neutral-400 mt-0.5">
+              Add platforms with 3 fields: Title, Profile Link, and Logo. Uploaded logos render automatically in Monochrome (Black & White) on your site.
+            </p>
+          </div>
+          <button
+            type="button"
+            id="add-social-btn"
+            class="px-4 py-2 rounded-xl bg-white hover:bg-neutral-200 text-[#101014] text-xs font-bold transition cursor-pointer shrink-0 self-start sm:self-auto"
+          >
+            + Add Platform
+          </button>
+        </div>
+
+        <!-- Social Profiles Rows Container -->
+        <div id="social-profiles-list" class="space-y-4">
+          <!-- Dynamically populated or rendered -->
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script define:vars={{ initialSocials }}>
+    let isDirty = false;
+    const form = document.getElementById('settings-form');
+    const saveBtn = document.getElementById('save-settings-btn');
+    const portraitInput = document.getElementById('portrait-file-input');
+    const portraitHidden = document.getElementById('heroPhotoUrl-input');
+    const portraitPreview = document.getElementById('portrait-preview');
+
+    // About Accordion Toggle
+    const accordionBtn = document.getElementById('toggle-about-accordion-btn');
+    const accordionContent = document.getElementById('about-accordion-content');
+    const chevron = document.getElementById('about-chevron');
+
+    accordionBtn?.addEventListener('click', () => {
+      const isHidden = accordionContent?.classList.contains('hidden');
+      if (isHidden) {
+        accordionContent?.classList.remove('hidden');
+        chevron?.classList.add('rotate-180');
+        accordionBtn.setAttribute('aria-expanded', 'true');
+      } else {
+        accordionContent?.classList.add('hidden');
+        chevron?.classList.remove('rotate-180');
+        accordionBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Social Profiles State
+    let socials = Array.isArray(initialSocials) ? [...initialSocials] : [];
+
+    const socialsContainer = document.getElementById('social-profiles-list');
+    const addSocialBtn = document.getElementById('add-social-btn');
+
+    function renderSocialProfiles() {
+      if (!socialsContainer) return;
+      socialsContainer.innerHTML = '';
+
+      if (socials.length === 0) {
+        socialsContainer.innerHTML = `
+          <div class="p-6 text-center text-xs text-neutral-500 bg-neutral-950/60 rounded-2xl border border-neutral-800">
+            No social links added yet. Click "+ Add Platform" to add Facebook, YouTube, etc.
+          </div>
+        `;
+        return;
+      }
+
+      socials.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'p-4 rounded-2xl bg-neutral-950/60 border border-neutral-800 flex flex-col md:flex-row md:items-center gap-4 transition hover:border-neutral-700';
+
+        row.innerHTML = `
+          <!-- 1. Title Field -->
+          <div class="flex-1 space-y-1">
+            <label class="block text-[11px] font-semibold text-neutral-400">1. Platform Title</label>
+            <input
+              type="text"
+              value="${item.title || ''}"
+              placeholder="e.g. Facebook / YouTube / LinkedIn"
+              class="social-title-input w-full px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-white"
+              data-index="${index}"
+            />
+          </div>
+
+          <!-- 2. Link URL Field -->
+          <div class="flex-[1.5] space-y-1">
+            <label class="block text-[11px] font-semibold text-neutral-400">2. Profile URL Link</label>
+            <input
+              type="text"
+              value="${item.url || ''}"
+              placeholder="https://facebook.com/yourpage"
+              class="social-url-input w-full px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-xs font-mono focus:outline-none focus:border-white"
+              data-index="${index}"
+            />
+          </div>
+
+          <!-- 3. Logo Upload & Monochrome Preview -->
+          <div class="flex-1 space-y-1">
+            <label class="block text-[11px] font-semibold text-neutral-400">3. Logo (Monochrome Preview)</label>
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-white border border-neutral-700 flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
+                ${item.logoUrl ? `
+                  <img src="${item.logoUrl}" alt="${item.title}" class="w-5 h-5 object-contain filter grayscale contrast-200" />
+                ` : `
+                  <span class="text-[10px] font-mono text-neutral-400">Icon</span>
+                `}
+              </div>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                class="social-logo-file-input block w-full text-[11px] text-neutral-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-neutral-800 file:text-white hover:file:bg-neutral-700 cursor-pointer"
+                data-index="${index}"
+              />
+            </div>
+          </div>
+
+          <!-- Remove Button -->
+          <button
+            type="button"
+            class="remove-social-btn p-2 rounded-xl bg-neutral-900 hover:bg-red-950/80 border border-neutral-800 hover:border-red-800 text-neutral-400 hover:text-red-300 text-xs transition cursor-pointer shrink-0 self-end md:self-center mt-2 md:mt-4"
+            data-index="${index}"
+            title="Remove platform"
+          >
+            ✕
+          </button>
+        `;
+
+        socialsContainer.appendChild(row);
+      });
+
+      // Bind input events
+      document.querySelectorAll('.social-title-input').forEach((input) => {
+        input.addEventListener('input', (e) => {
+          const idx = parseInt((e.target).getAttribute('data-index') || '0', 10);
+          socials[idx].title = (e.target).value.trim();
+          isDirty = true;
+        });
+      });
+
+      document.querySelectorAll('.social-url-input').forEach((input) => {
+        input.addEventListener('input', (e) => {
+          const idx = parseInt((e.target).getAttribute('data-index') || '0', 10);
+          socials[idx].url = (e.target).value.trim();
+          isDirty = true;
+        });
+      });
+
+      document.querySelectorAll('.social-logo-file-input').forEach((fileInput) => {
+        fileInput.addEventListener('change', async (e) => {
+          const idx = parseInt((e.target).getAttribute('data-index') || '0', 10);
+          const file = (e.target).files?.[0];
+          if (!file) return;
+
+          const fd = new FormData();
+          fd.append('file', file);
+          fd.append('type', 'image');
+
+          try {
+            window.showToast?.('Uploading logo...', 'success');
+            const res = await fetch('/api/admin/portfolio/upload', {
+              method: 'POST',
+              body: fd,
+            });
+            const result = await res.json();
+            if (result.success) {
+              socials[idx].logoUrl = result.data.url;
+              isDirty = true;
+              renderSocialProfiles();
+              window.showToast?.('Logo uploaded (rendered monochrome on frontend)', 'success');
+            } else {
+              window.showToast?.(result.error?.message || 'Logo upload failed', 'error');
+            }
+          } catch {
+            window.showToast?.('Network error during logo upload', 'error');
+          }
+        });
+      });
+
+      document.querySelectorAll('.remove-social-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(btn.getAttribute('data-index') || '0', 10);
+          socials.splice(idx, 1);
+          isDirty = true;
+          renderSocialProfiles();
+        });
+      });
+    }
+
+    addSocialBtn?.addEventListener('click', () => {
+      socials.push({
+        id: String(Date.now()),
+        title: '',
+        url: '',
+        logoUrl: '',
+      });
+      isDirty = true;
+      renderSocialProfiles();
+    });
+
+    renderSocialProfiles();
+
+    // Track unsaved changes
+    form?.addEventListener('input', () => { isDirty = true; });
+    window.addEventListener('beforeunload', (e) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // Handle Portrait Upload
+    portraitInput?.addEventListener('change', async () => {
+      const file = portraitInput.files?.[0];
+      if (!file) return;
+
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', 'image');
+
+      try {
+        window.showToast?.('Uploading portrait with Sharp...', 'success');
+        const res = await fetch('/api/admin/portfolio/upload', {
+          method: 'POST',
+          body: fd,
+        });
+        const result = await res.json();
+        if (result.success) {
+          portraitHidden.value = result.data.webpUrl;
+          portraitPreview.src = result.data.webpUrl;
+          isDirty = true;
+          window.showToast?.('Portrait uploaded successfully', 'success');
+        } else {
+          window.showToast?.(result.error?.message || 'Upload failed', 'error');
+        }
+      } catch {
+        window.showToast?.('Network error during upload', 'error');
+      }
+    });
+
+    // Save All Settings
+    saveBtn?.addEventListener('click', async () => {
+      const formData = new FormData(form);
+      const data = {};
+      formData.forEach((val, key) => { data[key] = val; });
+
+      // Gather live social profiles directly from DOM rows (Production bulletproof)
+      const gatheredSocials = [];
+      const rows = document.querySelectorAll('#social-profiles-list > div');
+      rows.forEach((row, idx) => {
+        const titleInput = row.querySelector('.social-title-input');
+        const urlInput = row.querySelector('.social-url-input');
+        const title = titleInput ? titleInput.value.trim() : (socials[idx]?.title || '');
+        const url = urlInput ? urlInput.value.trim() : (socials[idx]?.url || '');
+        const logoUrl = socials[idx]?.logoUrl || '';
+        if (title && url) {
+          gatheredSocials.push({
+            id: socials[idx]?.id || String(Date.now() + idx),
+            title,
+            url,
+            logoUrl,
+          });
+        }
+      });
+      socials = gatheredSocials;
+      data.socialProfiles = gatheredSocials;
+
+      try {
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'Saving...';
+
+        const res = await fetch('/api/admin/portfolio/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          isDirty = false;
+          window.showToast?.('All settings & social profiles saved!', 'success');
+        } else {
+          window.showToast?.(result.error?.message || 'Save failed', 'error');
+        }
+      } catch {
+        window.showToast?.('Network error while saving settings', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save All Settings';
+      }
+    });
+  </script>
+</AdminLayout>

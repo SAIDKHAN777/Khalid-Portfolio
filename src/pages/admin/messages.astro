@@ -1,0 +1,10 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import MessagesManager from '@/components/admin/MessagesManager';
+
+export const prerender = false;
+---
+
+<AdminLayout title="Inbox Inquiries | Khalid Portfolio Admin" activeTab="messages">
+  <MessagesManager client:load />
+</AdminLayout>

@@ -1,0 +1,59 @@
+---
+interface ServiceItem {
+  id: string;
+  title: string;
+  order: number;
+}
+
+interface Props {
+  services?: ServiceItem[];
+}
+
+const defaultServices: ServiceItem[] = [
+  { id: '1', title: 'Video Editing', order: 1 },
+  { id: '2', title: 'Graphic Design', order: 2 },
+  { id: '3', title: 'Motion Graphic', order: 3 },
+  { id: '4', title: 'Digital Marketing', order: 4 },
+];
+
+const { services = defaultServices } = Astro.props;
+
+function getServiceSlug(title: string): string {
+  const lower = title.toLowerCase();
+  if (lower.includes('video')) return 'video-editing';
+  if (lower.includes('graphic design') || lower.includes('graphic designing')) return 'graphic-design';
+  if (lower.includes('motion')) return 'motion-graphics';
+  if (lower.includes('marketing')) return 'digital-marketing';
+  return lower.replace(/\s+/g, '-');
+}
+---
+
+<section
+  id="services"
+  class="relative w-full bg-[#FCFCFC] flex items-center px-8 md:px-16 lg:px-24 py-12 md:py-16 text-[#101014] select-none border-b border-[#E8E8EC] transition-transform duration-500"
+  data-tone="light"
+>
+  <div class="services-container w-full max-w-7xl mx-auto transition-all duration-500 origin-center">
+    <div class="w-full max-w-2xl md:max-w-3xl space-y-0">
+      {services.map((item) => {
+        const slug = getServiceSlug(item.title);
+        return (
+          <a
+            href={`/services/${slug}`}
+            class="service-row-item border-b border-[#D8D8DC] py-4 md:py-5 lg:py-6 flex items-center justify-between group hover:border-[#101014] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2"
+            title={`View ${item.title} client works`}
+          >
+            <div class="flex items-center">
+              <h3 class="text-xl md:text-2xl lg:text-3xl font-medium tracking-tight text-left text-[#101014] group-hover:translate-x-2 transition-transform duration-300">
+                {item.title}
+              </h3>
+            </div>
+            <span class="text-lg md:text-xl font-light text-slate-400 group-hover:text-[#101014] group-hover:translate-x-1.5 transition-all duration-300">
+              →
+            </span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</section>

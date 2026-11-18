@@ -1,0 +1,101 @@
+---
+interface Props {
+  title: string;
+  subtitle?: string | null;
+  tags?: string[];
+  mediaType?: 'IMAGE' | 'VIDEO';
+  mediaUrl?: string | null;
+  posterUrl?: string | null;
+  fallbackColorA?: string | null;
+  fallbackColorB?: string | null;
+  focalX?: number;
+  focalY?: number;
+  altText?: string | null;
+  linkLabel?: string | null;
+  linkUrl?: string | null;
+  tone?: 'light' | 'dark';
+  sectionTitle?: string;
+  index?: number;
+  total?: number;
+  counter?: string;
+  isFirst?: boolean;
+  images?: string[];
+}
+
+const {
+  title,
+  mediaType = 'IMAGE',
+  mediaUrl,
+  posterUrl,
+  fallbackColorA = '#1e1e24',
+  fallbackColorB = '#2b2d42',
+  focalX = 50,
+  focalY = 50,
+  altText,
+  linkUrl,
+  tone = 'dark',
+  sectionTitle,
+  index,
+  total,
+  counter,
+  isFirst = false,
+} = Astro.props;
+
+const colorA = fallbackColorA || '#1e1e24';
+const colorB = fallbackColorB || '#2b2d42';
+const fallbackStyle = `background: linear-gradient(135deg, ${colorA}, ${colorB});`;
+const computedCounter = counter || (index && total ? `${String(index).padStart(2, '0')} / ${String(total).padStart(2, '0')}` : '01 / 01');
+const focalStyle = `object-position: ${focalX}% ${focalY}%;`;
+
+// Derive AVIF and WebP srcset URLs
+const avifUrl = mediaUrl?.endsWith('.webp') ? mediaUrl.replace('.webp', '.avif') : undefined;
+const webpUrl = mediaUrl?.endsWith('.avif') ? mediaUrl.replace('.avif', '.webp') : mediaUrl;
+---
+
+<div
+  class="work-panel relative w-full h-screen overflow-hidden flex flex-col justify-center items-center select-none"
+  data-tone={tone}
+  data-work-title={title}
+  data-section-title={sectionTitle}
+  data-counter={computedCounter}
+  data-link-url={linkUrl}
+  data-media-url={mediaUrl}
+  data-media-type={mediaType}
+  data-focal-x={focalX}
+  data-focal-y={focalY}
+  style={fallbackStyle}
+>
+  {mediaUrl && mediaType === 'IMAGE' && (
+    <picture class="absolute inset-0 w-full h-full pointer-events-none">
+      {avifUrl && <source srcset={avifUrl} type="image/avif" />}
+      {webpUrl && <source srcset={webpUrl} type="image/webp" />}
+      <img
+        src={mediaUrl}
+        alt={altText || title}
+        width="2560"
+        height="1440"
+        loading={isFirst ? 'eager' : 'lazy'}
+        decoding={isFirst ? 'sync' : 'async'}
+        class="w-full h-full object-cover"
+        style={focalStyle}
+      />
+    </picture>
+  )}
+
+  {mediaUrl && mediaType === 'VIDEO' && (
+    <video
+      src={mediaUrl}
+      poster={posterUrl || undefined}
+      muted
+      loop
+      playsinline
+      autoplay
+      preload="metadata"
+      class="panel-video absolute inset-0 w-full h-full object-cover pointer-events-none"
+      style={focalStyle}
+    ></video>
+  )}
+
+  <!-- Darkening overlay for signature push-and-darken effect (opacity 0 to 0.4 = 40% darkening) -->
+  <div class="panel-dark-overlay absolute inset-0 bg-black pointer-events-none opacity-0 z-10"></div>
+</div>

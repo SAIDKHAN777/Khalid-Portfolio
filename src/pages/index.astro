@@ -1,0 +1,214 @@
+---
+import '../styles/global.css';
+import Hero from '../components/Hero.astro';
+import Services from '../components/Services.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import WorkPanel from '../components/WorkPanel.astro';
+import Footer from '../components/Footer.astro';
+import FixedUI from '../components/FixedUI.astro';
+import MenuButton from '../components/MenuButton.astro';
+import Topbar from '../components/Topbar.astro';
+import { getPortfolioData } from '../lib/public-data';
+
+export const prerender = false;
+
+const isPreview = Astro.url.searchParams.get('preview') === 'true';
+const { settings, services, sections } = await getPortfolioData({ preview: isPreview });
+
+const firstSection = sections[0];
+const initialCounter = firstSection
+  ? `01 / ${String(firstSection.works.length).padStart(2, '0')}`
+  : '01 / 01';
+
+const navSections = [
+  { title: 'Video Editing', slug: 'video-editing' },
+  { title: 'Graphic Design', slug: 'graphic-design' },
+  { title: 'Motion Graphics', slug: 'motion-graphics' },
+  { title: 'Digital Marketing', slug: 'digital-marketing' },
+];
+
+const heroSocialProfiles =
+  Array.isArray(settings.socialProfiles) && settings.socialProfiles.length > 0
+    ? (settings.socialProfiles as any[])
+    : [
+        { id: '1', title: 'Facebook', url: settings.aboutFacebookUrl || 'https://facebook.com', logoUrl: '' },
+        { id: '2', title: 'YouTube', url: settings.aboutYoutubeUrl || 'https://youtube.com', logoUrl: '' },
+        { id: '3', title: 'LinkedIn', url: settings.aboutLinkedinUrl || 'https://linkedin.com', logoUrl: '' },
+        { id: '4', title: 'GitHub', url: settings.aboutGithubUrl || 'https://github.com', logoUrl: '' },
+        { id: '5', title: 'X', url: settings.aboutXUrl || 'https://x.com', logoUrl: '' },
+      ];
+
+const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : 'https://khalid.dev/';
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Khalid',
+  alternateName: 'খালিদ',
+  url: 'https://khalid.dev',
+  image: settings.heroPhotoUrl || 'https://khalid.dev/images/said-cutout.png',
+  jobTitle: [
+    'AI Engineer',
+    'AI Automation Expert',
+    'Full Stack Developer',
+    'Digital Marketing Expert',
+  ],
+  worksFor: {
+    '@type': 'Organization',
+    name: 'Self-Employed',
+  },
+  description: settings.heroIntro,
+  sameAs: [
+    settings.githubUrl || 'https://github.com/khalid',
+    settings.linkedinUrl || 'https://linkedin.com/in/khalid',
+    settings.xUrl || 'https://x.com/khalid',
+  ].filter(Boolean),
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{settings.seoTitle || 'Khalid | AI Engineer & Full Stack Developer'}</title>
+    <meta name="description" content={settings.seoDescription || settings.heroIntro} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- OpenGraph / Facebook -->
+    <meta property="og:title" content={settings.seoTitle || 'Khalid | AI Engineer & Full Stack Developer'} />
+    <meta property="og:description" content={settings.seoDescription || settings.heroIntro} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    {settings.ogImageUrl && <meta property="og:image" content={settings.ogImageUrl} />}
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={settings.seoTitle || 'Khalid | AI Engineer & Full Stack Developer'} />
+    <meta name="twitter:description" content={settings.seoDescription || settings.heroIntro} />
+    {settings.ogImageUrl && <meta name="twitter:image" content={settings.ogImageUrl} />}
+
+    <!-- JSON-LD Structured Data (Person Schema) -->
+    <script type="application/ld+json" set:html={JSON.stringify(personSchema)} />
+  </head>
+  <body class="bg-[#FCFCFC] text-[#101014] antialiased selection:bg-[#101014] selection:text-white overflow-x-hidden">
+    <!-- Accessible Skip Link -->
+    <a
+      href="#scroll-container"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#101014] focus:text-white focus:rounded-lg focus:shadow-2xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-semibold"
+    >
+      Skip to content
+    </a>
+    {isPreview && (
+      <div class="fixed top-0 inset-x-0 z-50 bg-amber-500 text-black px-4 py-1.5 flex items-center justify-between text-xs font-mono font-bold tracking-wider shadow-lg">
+        <span class="flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+          PREVIEW MODE (Draft works are visible)
+        </span>
+        <a
+          href="/admin/works"
+          class="underline hover:text-black/80 font-sans uppercase tracking-normal text-xs"
+        >
+          Return to Admin Studio →
+        </a>
+      </div>
+    )}
+
+    <!-- Topbar (Black Topbar with Brand, About, Works, Press) -->
+    <Topbar
+      brandName="KHALID"
+      firstWorkSlug={firstSection?.slug || 'video-editing'}
+    />
+
+    <!-- Menu Button (Top Right Fixed + Fullscreen Nav Overlay) -->
+    <MenuButton
+      sections={navSections}
+      contactUrl="/#footer"
+    />
+
+    <!-- Main Scroll Container -->
+    <main id="scroll-container">
+      <!-- 1. Hero -->
+      <Hero
+        greeting={settings.heroGreeting}
+        intro={settings.heroIntro}
+        photoUrl={settings.heroPhotoUrl}
+        socialProfiles={heroSocialProfiles}
+      />
+
+      <!-- 2. Services List -->
+      {services.length > 0 && <Services services={services} />}
+
+      <!-- 3. Work Sections (Each with HeadingBand + Pinned Panels Stack) -->
+      {sections.map((section, sIdx) => (
+        <section
+          id={section.slug}
+          class="work-section section-container relative w-full h-screen overflow-hidden flex flex-col"
+          data-section-index={sIdx}
+          data-section-id={section.id}
+          data-section-title={section.title}
+          data-works-count={section.works.length}
+        >
+          <SectionHeading title={section.title} />
+
+          <div
+            class="panels-stack relative w-full h-screen overflow-hidden shrink-0"
+            data-section-title={section.title}
+            data-works-count={section.works.length}
+          >
+            {section.works.map((work, idx) => (
+                <div
+                  class="panel-wrapper absolute inset-0 w-full h-full"
+                  data-panel-index={idx}
+                >
+                  <WorkPanel
+                    title={work.title}
+                    subtitle={work.subtitle}
+                    tags={work.tagsList}
+                    mediaType={work.mediaType}
+                    mediaUrl={work.mediaUrl}
+                    posterUrl={work.posterUrl}
+                    fallbackColorA={work.fallbackColorA}
+                    fallbackColorB={work.fallbackColorB}
+                    focalX={work.focalX}
+                    focalY={work.focalY}
+                    altText={work.altText}
+                    linkLabel={work.linkLabel}
+                    linkUrl={work.linkUrl}
+                    tone={work.computedTone}
+                    sectionTitle={section.title}
+                    index={idx + 1}
+                    total={section.works.length}
+                    isFirst={sIdx === 0 && idx === 0}
+                  />
+                </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <!-- 4. Footer -->
+      <Footer
+        headline={settings.footerHeadline}
+        subline={settings.footerSubline}
+        contactButtonLabel={settings.contactButtonLabel}
+        contactUrl={settings.contactUrl}
+        copyright={settings.footerCopyright}
+        sections={navSections.map((s, i) => ({ id: String(i + 1), title: s.title, slug: s.slug }))}
+      />
+    </main>
+
+    <!-- Persistent Fixed UI (View Button, Bottom Bar & Media Lightbox) -->
+    <FixedUI
+      ownerName={settings.ownerName}
+      activeSection={firstSection?.title || 'Works'}
+      counter={initialCounter}
+    />
+
+    <!-- Initialize Client Motion (Lenis + GSAP ScrollTrigger) -->
+    <script>
+      import { initPortfolioMotion } from '../scripts/motion';
+      initPortfolioMotion();
+    </script>
+  </body>
+</html>

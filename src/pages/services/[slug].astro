@@ -1,0 +1,96 @@
+---
+import '../../styles/global.css';
+import Topbar from '../../components/Topbar.astro';
+import { getPortfolioData } from '../../lib/public-data';
+
+export const prerender = false;
+
+const { slug = 'video-editing' } = Astro.params;
+
+const TITLE_MAP: Record<string, string> = {
+  'video-editing': 'VIDEO EDITING',
+  'graphic-design': 'GRAPHIC DESIGN',
+  'motion-graphics': 'MOTION GRAPHIC',
+  'digital-marketing': 'DIGITAL MARKETING',
+};
+
+const currentSlug = slug || 'video-editing';
+const { sections } = await getPortfolioData({ pinnedOnly: false });
+const matchedSection = sections.find((s) => s.slug === currentSlug);
+const displayTitle = matchedSection?.title ? matchedSection.title.toUpperCase() : (TITLE_MAP[currentSlug] || currentSlug.replace(/-/g, ' ').toUpperCase());
+const works = matchedSection?.works || [];
+
+// Calculate generous SVG viewBox width so long titles never clip
+const textLen = displayTitle.length;
+const viewBoxWidth = Math.max(1600, Math.ceil(textLen * 115 + 400));
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{displayTitle} | Khalid</title>
+    <meta name="description" content={`Dedicated showcase for ${displayTitle} by Khalid.`} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-[#FCFCFC] text-[#101014] antialiased selection:bg-[#101014] selection:text-white min-h-screen flex flex-col">
+    <!-- Topbar Navigation -->
+    <Topbar brandName="KHALID" />
+
+    <!-- Back Button to return to Home or previous session -->
+    <div class="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pt-20 md:pt-24 select-none">
+      <a
+        href="/"
+        id="service-back-button"
+        class="inline-flex items-center gap-2 text-sm md:text-base font-semibold tracking-wide text-[#101014] hover:text-[#101014]/60 transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2 py-1 cursor-pointer"
+        aria-label="Back to Previous Session"
+        onclick="if (history.length > 1) { history.back(); return false; }"
+      >
+        <svg
+          class="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        <span>Back</span>
+      </a>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full flex flex-col items-center justify-start pt-8 md:pt-12">
+      <!-- Giant Headline Band matching the first interface with zero-clipping viewBox -->
+      <div
+        class="section-heading-band w-full h-[40vh] md:h-[48vh] min-h-[240px] md:min-h-[360px] max-h-[540px] bg-[#FCFCFC] flex items-center justify-center px-4 md:px-8 lg:px-[clamp(2rem,3.75vw,4.5rem)] overflow-hidden select-none shrink-0"
+        data-tone="light"
+      >
+        <div class="w-full flex items-center justify-center h-full">
+          <svg
+            class="w-full h-full max-h-[36vh] md:max-h-[42vh] select-none pointer-events-none"
+            viewBox={`0 0 ${viewBoxWidth} 260`}
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden="true"
+          >
+            <text
+              x="50%"
+              y="58%"
+              dominant-baseline="middle"
+              text-anchor="middle"
+              fill="#101014"
+              font-size="180"
+              font-weight="700"
+              letter-spacing="-0.03em"
+              font-family="'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+            >
+              {displayTitle}
+            </text>
+          </svg>
+          <h1 class="sr-only">{displayTitle}</h1>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

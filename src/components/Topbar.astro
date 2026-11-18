@@ -1,0 +1,165 @@
+---
+import ContactModal from './ContactModal.astro';
+
+interface Props {
+  brandName?: string;
+  firstWorkSlug?: string;
+}
+
+const {
+  brandName = 'KHALID',
+  firstWorkSlug = 'video-editing',
+} = Astro.props;
+
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isNotHome = currentPath !== '/';
+
+const isAbout = currentPath === '/about';
+const isPress = currentPath === '/press' || currentPath.startsWith('/press/');
+const isWorks = currentPath.startsWith('/services') || currentPath.startsWith('/works');
+const isContact = currentPath === '/contact';
+---
+
+<header
+  id="topbar"
+  class="fixed top-0 inset-x-0 h-14 md:h-16 bg-[#101014] text-white z-40 flex items-center justify-between px-3 sm:px-6 md:px-12 lg:px-16 border-b border-white/10 select-none shadow-md"
+>
+  <!-- Left: Brand / Name -->
+  <a
+    href="/"
+    class="text-xs sm:text-sm md:text-base font-bold tracking-wider sm:tracking-widest uppercase text-white hover:text-white/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 shrink-0"
+  >
+    {brandName}
+  </a>
+
+  <!-- Center / Right: Nav Items (Home, Works, Press, About, Contact) -->
+  <nav class="flex items-center gap-1.5 sm:gap-4 md:gap-8 lg:gap-10 shrink-0" aria-label="Main Navigation">
+    <a
+      href="/"
+      id="topbar-home-link"
+      data-nav="home"
+      class={`topbar-nav-link text-xs sm:text-sm md:text-base font-medium tracking-normal sm:tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 sm:px-2 py-1 flex items-center gap-1.5 ${
+        currentPath === '/' ? 'is-active text-white font-bold' : 'text-white/70 hover:text-white'
+      }`}
+    >
+      <span>Home</span>
+    </a>
+    <a
+      href="/works"
+      id="topbar-works-link"
+      data-nav="works"
+      class={`topbar-nav-link text-xs sm:text-sm md:text-base font-medium tracking-normal sm:tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 sm:px-2 py-1 ${
+        isWorks ? 'is-active text-white font-bold' : 'text-white/70 hover:text-white'
+      }`}
+    >
+      Works
+    </a>
+    <a
+      href="/press"
+      id="topbar-press-link"
+      data-nav="press"
+      class={`topbar-nav-link text-xs sm:text-sm md:text-base font-medium tracking-normal sm:tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 sm:px-2 py-1 ${
+        isPress ? 'is-active text-white font-bold' : 'text-white/70 hover:text-white'
+      }`}
+    >
+      Press
+    </a>
+    <a
+      href="/about"
+      id="topbar-about-link"
+      data-nav="about"
+      class={`topbar-nav-link text-xs sm:text-sm md:text-base font-medium tracking-normal sm:tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 sm:px-2 py-1 ${
+        isAbout ? 'is-active text-white font-bold' : 'text-white/70 hover:text-white'
+      }`}
+    >
+      About
+    </a>
+    <button
+      type="button"
+      id="topbar-contact-link"
+      data-nav="contact"
+      class={`topbar-nav-link open-contact-modal text-xs sm:text-sm md:text-base font-medium tracking-normal sm:tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 sm:px-2 py-1 cursor-pointer bg-transparent border-0 ${
+        isContact ? 'is-active text-white font-bold' : 'text-white/70 hover:text-white'
+      }`}
+    >
+      Contact
+    </button>
+  </nav>
+</header>
+
+<!-- Global Contact Form Modal (Triggered directly from Topbar Contact button or any .open-contact-modal) -->
+<ContactModal />
+
+<style>
+  .topbar-nav-link {
+    position: relative;
+    padding-bottom: 6px;
+    transition: color 0.2s ease;
+  }
+  .topbar-nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background-color: #ffffff;
+    border-radius: 9999px;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    opacity: 0;
+  }
+  .topbar-nav-link.is-active {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  .topbar-nav-link.is-active::after {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+</style>
+
+<script>
+  // Hide topbar on scroll down, immediately reveal on scroll up
+  // (Only applies to standalone pages not managed by motion.ts)
+  const isMotionManaged = document.getElementById('scroll-container') !== null;
+  if (!isMotionManaged) {
+    const topbar = document.getElementById('topbar');
+    if (topbar) {
+      topbar.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
+      let lastScrollY = window.scrollY;
+      let isHidden = false;
+
+      window.addEventListener('scroll', () => {
+        const currentY = window.scrollY;
+        if (currentY <= 50) {
+          if (isHidden) {
+            isHidden = false;
+            topbar.style.transform = 'translateY(0)';
+            topbar.style.opacity = '1';
+            topbar.style.pointerEvents = 'auto';
+          }
+          lastScrollY = currentY;
+          return;
+        }
+
+        const diff = currentY - lastScrollY;
+        const threshold = 6;
+
+        if (diff > threshold && !isHidden) {
+          isHidden = true;
+          topbar.style.transform = 'translateY(-100%)';
+          topbar.style.opacity = '0';
+          topbar.style.pointerEvents = 'none';
+        } else if (diff < -threshold && isHidden) {
+          isHidden = false;
+          topbar.style.transform = 'translateY(0)';
+          topbar.style.opacity = '1';
+          topbar.style.pointerEvents = 'auto';
+        }
+        lastScrollY = currentY;
+      }, { passive: true });
+    }
+  }
+</script>

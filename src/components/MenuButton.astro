@@ -1,0 +1,111 @@
+---
+interface Props {
+  tone?: 'light' | 'dark';
+  sections?: { title: string; slug: string }[];
+  contactUrl?: string;
+}
+
+const defaultMenuSections = [
+  { title: 'Video Editing', slug: 'video-editing' },
+  { title: 'Graphic Design', slug: 'graphic-design' },
+  { title: 'Motion Graphics', slug: 'motion-graphics' },
+  { title: 'Digital Marketing', slug: 'digital-marketing' },
+];
+
+const {
+  tone = 'dark',
+  sections = defaultMenuSections,
+  contactUrl = '/#footer',
+} = Astro.props;
+
+// Ensure all 4 specific sessions are included
+const menuItems = sections.some((s) => s.slug === 'digital-marketing')
+  ? sections
+  : [...sections, { title: 'Digital Marketing', slug: 'digital-marketing' }];
+---
+
+<button
+  id="menu-button"
+  class="fixed top-6 right-6 md:top-8 md:right-10 z-50 flex flex-col justify-between w-[38px] h-[24px] md:w-[42px] md:h-[26px] cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 opacity-0 pointer-events-none transition-all duration-300 bg-transparent border-0 p-0"
+  aria-label="Open Navigation Menu"
+  data-tone={tone}
+>
+  <span class="menu-line w-full h-[2.5px] md:h-[3px] rounded-full transition-all duration-300 origin-center group-hover:scale-x-95"></span>
+  <span class="menu-line w-full h-[2.5px] md:h-[3px] rounded-full transition-all duration-300 origin-center group-hover:scale-x-70"></span>
+  <span class="menu-line w-full h-[2.5px] md:h-[3px] rounded-full transition-all duration-300 origin-center group-hover:scale-x-95"></span>
+</button>
+
+<!-- Fullscreen Navigation Menu Overlay (Pure White background, Jet Black text, Completely Clean) -->
+<div
+  id="nav-overlay"
+  class="fixed inset-0 z-45 bg-[#FCFCFC] text-[#101014] opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-center items-center px-8 md:px-16 lg:px-24 select-none cursor-pointer"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Site Navigation"
+>
+  <!-- Top Left Back Button (Returns directly to the session the user came from) -->
+  <div class="absolute top-6 left-6 md:top-8 md:left-12 lg:left-16 z-50">
+    <button
+      type="button"
+      id="nav-overlay-back"
+      class="group flex items-center gap-2.5 text-base md:text-lg font-semibold tracking-wide text-[#101014] hover:text-[#101014]/60 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2 py-1 bg-transparent border-0"
+      aria-label="Back to Previous Session"
+    >
+      <svg
+        class="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
+      <span>Back</span>
+    </button>
+  </div>
+  <nav class="space-y-6 md:space-y-8 my-auto max-w-4xl w-full text-left cursor-default" aria-label="Sections">
+    {menuItems.map((s) => (
+      <div class="group flex items-baseline">
+        <a
+          href={`/services/${s.slug}`}
+          class="text-[clamp(2.5rem,5.5vw,5.5rem)] font-bold tracking-tight text-[#101014] hover:text-[#101014]/60 hover:translate-x-3 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2"
+        >
+          {s.title}
+        </a>
+      </div>
+    ))}
+    <div class="group flex items-baseline pt-6 border-t border-[#E4E4E8]">
+      <a
+        href={contactUrl}
+        class="text-[clamp(2rem,4vw,4rem)] font-bold tracking-tight text-[#101014]/80 hover:text-[#101014] hover:translate-x-3 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2"
+      >
+        Contact Us →
+      </a>
+    </div>
+  </nav>
+</div>
+
+<style>
+  #menu-button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  }
+  #menu-button:hover {
+    transform: scale(1.05);
+  }
+  #menu-button:active {
+    transform: scale(0.95);
+  }
+  #menu-button[data-tone="light"] .menu-line {
+    background-color: #101014 !important;
+  }
+  #menu-button[data-tone="dark"] .menu-line {
+    background-color: #FFFFFF !important;
+  }
+  #menu-button .menu-line {
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s ease;
+  }
+</style>

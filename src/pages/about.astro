@@ -1,0 +1,261 @@
+---
+import '../styles/global.css';
+import Topbar from '../components/Topbar.astro';
+import SocialLinks from '../components/SocialLinks.astro';
+import { getSiteSettings } from '../lib/public-data';
+
+export const prerender = false;
+
+const settings = await getSiteSettings();
+const aboutTitle = settings.aboutTitle || 'About Khalid';
+const bioText =
+  settings.aboutBio ||
+  [settings.aboutBioParagraph1, settings.aboutBioParagraph2, settings.aboutBioParagraph3]
+    .filter(Boolean)
+    .join('\n\n') ||
+  'I am Khalid, an AI Engineer, Creative Motion Technologist, and Full Stack Developer. Over the past several years, I have worked across the convergence of engineering rigour and cinematic media production—building intelligent software systems, resilient backend architectures, and high-retention digital media for modern brands and platforms worldwide.';
+
+const bioParagraphs = bioText.split(/\n\s*\n/).filter((p: string) => p.trim().length > 0);
+
+const rawSocialProfiles = Array.isArray(settings.socialProfiles) && settings.socialProfiles.length > 0
+  ? settings.socialProfiles
+  : [
+      { id: '1', title: 'Facebook', url: settings.aboutFacebookUrl || 'https://facebook.com', logoUrl: '' },
+      { id: '2', title: 'YouTube', url: settings.aboutYoutubeUrl || 'https://youtube.com', logoUrl: '' },
+      { id: '3', title: 'LinkedIn', url: settings.aboutLinkedinUrl || 'https://linkedin.com', logoUrl: '' },
+      { id: '4', title: 'GitHub', url: settings.aboutGithubUrl || 'https://github.com', logoUrl: '' },
+      { id: '5', title: 'X', url: settings.aboutXUrl || 'https://x.com', logoUrl: '' },
+    ];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Khalid | AI Engineer & Creative Technologist</title>
+    <meta
+      name="description"
+      content="About Khalid - AI Engineer, Automation Expert, Full Stack Developer and Cinematic Media Specialist."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-[#FCFCFC] text-[#101014] antialiased selection:bg-[#101014] selection:text-white min-h-screen flex flex-col">
+    <!-- Topbar Navigation -->
+    <Topbar brandName="KHALID" />
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-6 md:px-12 lg:px-16 pt-24 md:pt-28 pb-24">
+      <!-- Back Button (No Home/About Breadcrumb per specification) -->
+      <div class="flex items-center justify-between mb-10 select-none">
+        <a
+          href="/"
+          id="about-back-button"
+          class="inline-flex items-center gap-2 text-sm md:text-base font-semibold tracking-wide text-[#101014] hover:text-[#101014]/60 transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-2 py-1 cursor-pointer"
+          aria-label="Back to Home"
+          onclick="if (history.length > 1) { history.back(); return false; }"
+        >
+          <svg
+            class="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          <span>Back</span>
+        </a>
+      </div>
+
+      <!-- 1. Headline & Editorial Article (No portrait picture per specification) -->
+      <section class="space-y-8 border-b border-[#E2E2E6] pb-16 mb-16">
+        <h1 class="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-[#101014] leading-[1.05]">
+          {aboutTitle}
+        </h1>
+
+        <!-- Editorial Article -->
+        <div class="space-y-6 text-base sm:text-lg md:text-xl text-slate-700 font-normal leading-relaxed">
+          {bioParagraphs.map((p: string) => (
+            <p class="whitespace-pre-line">{p.trim()}</p>
+          ))}
+        </div>
+
+        <!-- Social Media Links (Pure Monochrome Logos Only, No Text per user requirement) -->
+        <div class="pt-4">
+          <span class="block text-xs font-mono uppercase tracking-widest text-slate-400 mb-4">Connect Online</span>
+          <SocialLinks profiles={rawSocialProfiles} size="md" />
+        </div>
+      </section>
+
+      <!-- 2. Skills Section (Matching Homepage Services List Style Exactly) -->
+      <section class="space-y-4 pb-14 mb-14 select-none">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-slate-400">Skill</span>
+        </div>
+
+        <div class="w-full space-y-0">
+          <!-- 1. Video Editing -->
+          <a
+            href="/services/video-editing"
+            class="service-row-item border-b border-[#D8D8DC] py-4 sm:py-5 flex items-center justify-between group hover:border-[#101014] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 select-none"
+            title="View Video Editing client works"
+          >
+            <div class="flex items-center">
+              <h3 class="text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-left text-[#101014] group-hover:translate-x-2 transition-transform duration-300">
+                Video Editing
+              </h3>
+            </div>
+            <span class="text-lg sm:text-xl font-light text-slate-400 group-hover:text-[#101014] group-hover:translate-x-1.5 transition-all duration-300">
+              →
+            </span>
+          </a>
+
+          <!-- 2. Graphic Design -->
+          <a
+            href="/services/graphic-design"
+            class="service-row-item border-b border-[#D8D8DC] py-4 sm:py-5 flex items-center justify-between group hover:border-[#101014] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 select-none"
+            title="View Graphic Design client works"
+          >
+            <div class="flex items-center">
+              <h3 class="text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-left text-[#101014] group-hover:translate-x-2 transition-transform duration-300">
+                Graphic Design
+              </h3>
+            </div>
+            <span class="text-lg sm:text-xl font-light text-slate-400 group-hover:text-[#101014] group-hover:translate-x-1.5 transition-all duration-300">
+              →
+            </span>
+          </a>
+
+          <!-- 3. Motion Graphic -->
+          <a
+            href="/services/motion-graphics"
+            class="service-row-item border-b border-[#D8D8DC] py-4 sm:py-5 flex items-center justify-between group hover:border-[#101014] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 select-none"
+            title="View Motion Graphic client works"
+          >
+            <div class="flex items-center">
+              <h3 class="text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-left text-[#101014] group-hover:translate-x-2 transition-transform duration-300">
+                Motion Graphic
+              </h3>
+            </div>
+            <span class="text-lg sm:text-xl font-light text-slate-400 group-hover:text-[#101014] group-hover:translate-x-1.5 transition-all duration-300">
+              →
+            </span>
+          </a>
+
+          <!-- 4. Digital Marketing -->
+          <a
+            href="/services/digital-marketing"
+            class="service-row-item py-4 sm:py-5 flex items-center justify-between group transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 select-none"
+            title="View Digital Marketing client works"
+          >
+            <div class="flex items-center">
+              <h3 class="text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-left text-[#101014] group-hover:translate-x-2 transition-transform duration-300">
+                Digital Marketing
+              </h3>
+            </div>
+            <span class="text-lg sm:text-xl font-light text-slate-400 group-hover:text-[#101014] group-hover:translate-x-1.5 transition-all duration-300">
+              →
+            </span>
+          </a>
+        </div>
+      </section>
+
+      <!-- 3. Tools Section (Slim 90-degree sharp rectangular boxes per specification) -->
+      <section class="space-y-6 border-b border-[#E2E2E6] pb-16 mb-16">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-slate-400">Tools</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 select-none">
+          <!-- Photoshop -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#001E36] text-[#31A8FF] flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              Ps
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">Photoshop</span>
+          </div>
+
+          <!-- Premiere Pro -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#00005B] text-[#9999FF] flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              Pr
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">Premiere Pro</span>
+          </div>
+
+          <!-- After Effects -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#00005B] text-[#D291FF] flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              Ae
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">After Effects</span>
+          </div>
+
+          <!-- Illustrator -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#330000] text-[#FF9A00] flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              Ai
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">Illustrator</span>
+          </div>
+
+          <!-- DaVinci Resolve -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#181820] text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              Dv
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">DaVinci Resolve</span>
+          </div>
+
+          <!-- Blender -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#EA7600] text-white flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              Bl
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">Blender</span>
+          </div>
+
+          <!-- Figma -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#2C2D30] text-[#F24E1E] flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              Fg
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">Figma</span>
+          </div>
+
+          <!-- TypeScript -->
+          <div class="py-2.5 px-3 rounded-none bg-white border border-[#D8D8DC] hover:border-[#101014] hover:shadow-xs transition-all flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-none bg-[#3178C6] text-white flex items-center justify-center font-bold text-xs shrink-0 select-none">
+              TS
+            </span>
+            <span class="font-semibold text-xs sm:text-sm text-[#101014] truncate">TypeScript</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Bottom Footer CTA: Let's build something (No Collaboration label per specification) -->
+      <footer class="pt-6 flex flex-col md:flex-row items-center justify-between gap-6 select-none">
+        <div>
+          <p class="text-2xl sm:text-3xl font-bold text-[#101014]">
+            Let's build something extraordinary together.
+          </p>
+        </div>
+        <div class="flex items-center gap-4 shrink-0">
+          <a
+            href="/"
+            class="px-6 py-3.5 rounded-full border border-black/15 text-sm font-semibold text-[#101014] hover:bg-black/5 transition-all cursor-pointer"
+          >
+            ← Back to Home
+          </a>
+          <button
+            type="button"
+            class="open-contact-modal px-8 py-3.5 rounded-full bg-[#101014] text-white text-sm font-semibold hover:bg-black/85 transition-all shadow-md cursor-pointer"
+          >
+            Get in Touch →
+          </button>
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>

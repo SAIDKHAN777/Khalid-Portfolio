@@ -1,0 +1,48 @@
+---
+interface Props {
+  headline?: string;
+  subline?: string;
+  contactButtonLabel?: string;
+  contactUrl?: string;
+  copyright?: string;
+  sections?: { id: string; title: string; slug: string }[];
+}
+
+const {
+  headline = 'Connect with us',
+  subline = "Have a project in mind? Let's make it happen.",
+  contactButtonLabel = 'Contact Us ->',
+  contactUrl = 'mailto:contact@khalid.dev',
+  copyright = '© 2026 Khalid. All rights reserved.',
+  sections = [
+    { id: '1', title: 'Video Editing', slug: 'video-editing' },
+    { id: '2', title: 'Graphic Design', slug: 'graphic-design' },
+    { id: '3', title: 'Motion Graphics', slug: 'motion-graphics' },
+  ],
+} = Astro.props;
+---
+
+<footer
+  id="footer"
+  class="relative w-full h-screen min-h-[720px] bg-[#000000] text-white flex flex-col justify-center items-center px-8 lg:px-[clamp(2rem,3.75vw,4.5rem)] py-12 select-none"
+  data-tone="dark"
+>
+  <!-- Giant Headline & Contact Pill -->
+  <div class="max-w-7xl mx-auto w-full text-center space-y-10 my-auto">
+    <h2 class="text-[clamp(4rem,14vw,18rem)] font-bold tracking-tight-display text-white leading-[0.9]">
+      {headline}
+    </h2>
+    <p class="text-[clamp(1.5rem,2.08vw,2.5rem)] text-slate-400 font-normal max-w-3xl mx-auto leading-relaxed">
+      {subline}
+    </p>
+    <div class="pt-6">
+      <a
+        href="#contact"
+        class="shape-contact-btn open-contact-modal inline-flex items-center justify-center text-xl font-medium shadow-2xl hover:scale-[1.03] active:scale-95 transition-transform duration-300 group focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500 cursor-pointer"
+      >
+        <span>{contactButtonLabel.replace('->', '').trim()}</span>
+        <span class="ml-3 group-hover:translate-x-2 transition-transform duration-300">→</span>
+      </a>
+    </div>
+  </div>
+</footer>

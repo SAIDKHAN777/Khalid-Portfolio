@@ -1,0 +1,992 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { portfolioService } from '@/services/portfolio.service';
+
+export const prerender = false;
+
+const sections = await portfolioService.getSections();
+const works = await portfolioService.getWorks();
+
+const CATEGORIES = [
+  { slug: 'video-editing', name: 'Video Editing', num: '01' },
+  { slug: 'graphic-design', name: 'Graphic Design', num: '02' },
+  { slug: 'motion-graphics', name: 'Motion Graphics', num: '03' },
+  { slug: 'digital-marketing', name: 'Digital Marketing', num: '04' },
+];
+---
+
+<AdminLayout title="Works Studio | Admin" activeTab="works">
+  <div class="space-y-8 max-w-6xl">
+    <!-- Header & Action Bar -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
+      <div>
+        <h1 class="text-2xl font-extrabold text-[#101014] tracking-tight">Works Portfolio Studio</h1>
+        <p class="text-xs text-neutral-500 mt-1">
+          Manage showcase projects across 4 categories. Toggle Pin to Home to feature on homepage scroll panels.
+        </p>
+      </div>
+
+      <!-- Category Switcher Dropdown with Arrow (No Emojis) -->
+      <div class="flex items-center gap-3">
+        <div class="relative inline-block text-left" id="category-dropdown-container">
+          <button
+            type="button"
+            id="category-dropdown-btn"
+            class="px-4 py-2.5 rounded-xl bg-[#101014] text-white text-xs font-bold shadow-md hover:bg-black transition flex items-center gap-3 cursor-pointer border border-neutral-800"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span id="active-category-label">Video Editing</span>
+            <svg
+              id="category-chevron"
+              class="w-4 h-4 text-neutral-400 transition-transform duration-200"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div
+            id="category-dropdown-menu"
+            class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-[#101014] border border-neutral-800 shadow-2xl py-2 z-30 focus:outline-none"
+          >
+            {CATEGORIES.map((cat) => (
+              <button
+                type="button"
+                class="category-select-item w-full px-4 py-2.5 text-left text-xs font-semibold text-neutral-300 hover:text-white hover:bg-neutral-900 transition flex items-center justify-between cursor-pointer"
+                data-slug={cat.slug}
+                data-name={cat.name}
+              >
+                <span>{cat.name}</span>
+                <span class="text-[10px] font-mono text-neutral-500">{cat.num}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          id="open-full-modal-btn"
+          class="px-4 py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-[#101014] text-xs font-bold border border-neutral-300 shadow-xs transition cursor-pointer flex items-center gap-1.5"
+        >
+          <span>+ Advanced Project</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Pill Tabs (No Emojis) -->
+    <div class="flex flex-wrap items-center gap-2 pb-2">
+      {CATEGORIES.map((cat, idx) => {
+        const sec = sections.find((s) => s.slug === cat.slug);
+        const count = works.filter((w) => w.sectionId === sec?.id).length;
+        const pinnedCount = works.filter((w) => w.sectionId === sec?.id && w.isPinned).length;
+        return (
+          <button
+            type="button"
+            class={`category-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              idx === 0
+                ? 'bg-[#101014] text-white shadow'
+                : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-100'
+            }`}
+            data-slug={cat.slug}
+            data-name={cat.name}
+          >
+            <span>{cat.name}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-800 text-neutral-300 font-mono">
+              {count}
+            </span>
+            {pinnedCount > 0 && (
+              <span class="text-[10px] text-amber-400 font-mono" title={`${pinnedCount} pinned to homepage`}>
+                Pin {pinnedCount}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+
+    <!-- Clean Fast Add Card (No Emojis, No Subtitle / Summary Field) -->
+    <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl" id="quick-add-card">
+      <div class="flex items-center justify-between border-b border-neutral-800 pb-4">
+        <div>
+          <h2 class="text-base font-bold text-white" id="quick-add-heading">
+            Add Work to Video Editing
+          </h2>
+          <p class="text-xs text-neutral-400 mt-0.5" id="quick-add-desc">
+            Upload media or add a watch link. Check Pin to Home to showcase on the homepage scroll panels.
+          </p>
+        </div>
+        <span class="text-xs font-mono text-neutral-400 uppercase tracking-widest" id="active-category-slug-badge">
+          #video-editing
+        </span>
+      </div>
+
+      <form id="quick-add-form" class="space-y-4">
+        <input type="hidden" id="quick-section-id" value={sections.find(s => s.slug === 'video-editing')?.id || ''} />
+
+        <!-- Row 1: Title & External Link -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-neutral-300">Project Title (Required)</label>
+            <input
+              type="text"
+              id="quick-title"
+              required
+              placeholder="e.g. Commercial Reel 2026 / Brand Campaign"
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-neutral-300">
+              <span id="quick-link-label">Video Watch Link (YouTube, Vimeo, Social Media URL)</span>
+            </label>
+            <input
+              type="text"
+              id="quick-link-url"
+              placeholder="https://youtube.com/watch?v=... or social post link"
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm font-mono focus:outline-none focus:border-white"
+            />
+          </div>
+        </div>
+
+        <!-- Row 2: File Upload (Thumbnail / Graphic / Campaign Image) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-neutral-300">
+            <span id="quick-file-label">Project Image / Video Thumbnail</span>
+          </label>
+          <div class="flex items-center gap-3">
+            <input
+              type="file"
+              id="quick-file-input"
+              accept="image/png,image/jpeg,image/webp,video/mp4"
+              class="block w-full text-xs text-neutral-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-white file:text-[#101014] hover:file:bg-neutral-200 cursor-pointer"
+            />
+            <input type="hidden" id="quick-media-url" />
+          </div>
+          <div id="quick-upload-feedback" class="text-[11px] text-neutral-400 font-mono mt-1"></div>
+        </div>
+
+        <!-- Row 3: Pin to Home & Save Button -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-neutral-800">
+          <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              id="quick-is-pinned"
+              checked
+              class="w-4 h-4 rounded bg-neutral-900 border-neutral-700 text-white focus:ring-0 cursor-pointer"
+            />
+            <span class="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>Pin to Homepage Scroll Section</span>
+            </span>
+            <span class="text-[11px] text-neutral-400 font-normal">
+              (Unpinned works only show on the full service page)
+            </span>
+          </label>
+
+          <button
+            type="submit"
+            id="quick-save-btn"
+            class="px-6 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-[#101014] text-xs font-bold shadow-md cursor-pointer transition flex items-center justify-center gap-2"
+          >
+            <span>Save to Database</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Works Display Panels by Category (No Subtitle / Summary display) -->
+    <div id="category-panels-container" class="space-y-8">
+      {CATEGORIES.map((cat) => {
+        const sec = sections.find((s) => s.slug === cat.slug);
+        const catWorks = sec ? works.filter((w) => w.sectionId === sec.id) : [];
+        return (
+          <div
+            class={`category-section-block ${cat.slug === 'video-editing' ? 'block' : 'hidden'}`}
+            data-category-slug={cat.slug}
+          >
+            <!-- Card Wrapper -->
+            <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl overflow-hidden shadow-xl">
+              <!-- Category Header (No Emojis) -->
+              <div class="px-6 py-4 bg-neutral-950/80 border-b border-neutral-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <h2 class="text-lg font-bold text-white uppercase tracking-tight">{cat.name}</h2>
+                  <span class="text-xs text-neutral-400 font-mono">
+                    ({catWorks.length} projects • {catWorks.filter(w => w.isPinned).length} pinned to home)
+                  </span>
+                </div>
+                <code class="text-xs text-neutral-400 font-mono">#{cat.slug}</code>
+              </div>
+
+              <!-- Works List -->
+              <div class="divide-y divide-neutral-800" id={`works-list-${cat.slug}`}>
+                {catWorks.length === 0 ? (
+                  <div class="p-12 text-center text-xs text-neutral-500">
+                    No projects in {cat.name} yet. Use the form above to add your first work!
+                  </div>
+                ) : (
+                  catWorks.map((work, idx) => (
+                    <div
+                      class="p-6 hover:bg-neutral-900/40 transition flex flex-col md:flex-row md:items-center justify-between gap-6 group work-row"
+                      data-id={work.id}
+                      data-section-id={work.sectionId}
+                      data-pinned={String(work.isPinned)}
+                      data-published={String(work.isPublished)}
+                    >
+                      <!-- Left: Thumbnail & Info -->
+                      <div class="flex items-start gap-5 flex-1 min-w-0">
+                        <!-- Media Preview Box -->
+                        <div
+                          class="w-24 h-16 rounded-xl border border-neutral-700 shrink-0 flex items-center justify-center overflow-hidden relative shadow-md bg-neutral-950 group/thumb"
+                          style={!work.mediaUrl ? `background: linear-gradient(135deg, ${work.fallbackColorA}, ${work.fallbackColorB});` : undefined}
+                        >
+                          {work.mediaUrl ? (
+                            work.mediaType === 'IMAGE' ? (
+                              <img src={work.mediaUrl} alt={work.title} class="w-full h-full object-cover group-hover/thumb:scale-105 transition" />
+                            ) : (
+                              <div class="relative w-full h-full flex items-center justify-center bg-black/60">
+                                {work.posterUrl && <img src={work.posterUrl} alt={work.title} class="absolute inset-0 w-full h-full object-cover opacity-60" />}
+                                <span class="relative z-10 text-white text-xs font-mono font-bold flex items-center gap-1">Video</span>
+                              </div>
+                            )
+                          ) : (
+                            <div class="text-[9px] font-mono text-white/80 uppercase">Fallback</div>
+                          )}
+                        </div>
+
+                        <!-- Details (No Subtitle / Summary) -->
+                        <div class="space-y-1.5 min-w-0 flex-1">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-base font-bold text-white group-hover:text-neutral-200 transition truncate">
+                              {work.title}
+                            </h3>
+
+                            <!-- Pinned Badge -->
+                            <span
+                              class={`pin-badge px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 ${
+                                work.isPinned
+                                  ? 'bg-white text-[#101014] shadow'
+                                  : 'bg-neutral-900 text-neutral-500 border border-neutral-800'
+                              }`}
+                            >
+                              <span>{work.isPinned ? 'Pinned to Home' : 'Unpinned'}</span>
+                            </span>
+
+                            <!-- Published Badge -->
+                            <span class={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              work.isPublished ? 'bg-neutral-800 text-neutral-300 border border-neutral-700' : 'bg-red-950/60 text-red-300 border border-red-800/60'
+                            }`}>
+                              {work.isPublished ? 'Published' : 'Draft'}
+                            </span>
+                          </div>
+
+                          <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-neutral-400">
+                            {work.linkUrl && (
+                              <a
+                                href={work.linkUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center gap-1 text-white hover:underline font-mono text-[10px] bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded"
+                              >
+                                <span>Watch / Social Link ↗</span>
+                              </a>
+                            )}
+                            <span class="font-mono text-[10px] text-neutral-500">{work.mediaType}</span>
+                            {work.tags.slice(0, 3).map((tag) => (
+                              <span class="px-2 py-0.5 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400 font-mono">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Right: Controls & Actions -->
+                      <div class="flex flex-wrap items-center gap-2 shrink-0 self-end md:self-center">
+                        <!-- Move Up / Down -->
+                        <div class="inline-flex items-center gap-1 mr-1">
+                          <button
+                            type="button"
+                            class="move-work-btn p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer text-xs transition"
+                            data-id={work.id}
+                            data-dir="up"
+                            disabled={idx === 0}
+                            title="Move Up"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            class="move-work-btn p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer text-xs transition"
+                            data-id={work.id}
+                            data-dir="down"
+                            disabled={idx === catWorks.length - 1}
+                            title="Move Down"
+                          >
+                            ▼
+                          </button>
+                        </div>
+
+                        <!-- Pin / Unpin Button -->
+                        <button
+                          type="button"
+                          class={`toggle-pin-btn px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition flex items-center gap-1.5 ${
+                            work.isPinned
+                              ? 'bg-white text-[#101014] border-white hover:bg-neutral-200'
+                              : 'bg-neutral-900 text-neutral-300 border-neutral-700 hover:bg-neutral-800'
+                          }`}
+                          data-id={work.id}
+                          data-pinned={String(work.isPinned)}
+                          title="Toggle homepage showcase visibility"
+                        >
+                          <span>{work.isPinned ? 'Unpin' : 'Pin to Home'}</span>
+                        </button>
+
+                        <!-- Publish / Unpublish -->
+                        <button
+                          type="button"
+                          class={`toggle-publish-btn px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition ${
+                            work.isPublished
+                              ? 'bg-neutral-900 text-neutral-300 border-neutral-700 hover:bg-neutral-800'
+                              : 'bg-emerald-950 text-emerald-300 border-emerald-800 hover:bg-emerald-900'
+                          }`}
+                          data-id={work.id}
+                          data-published={String(work.isPublished)}
+                        >
+                          {work.isPublished ? 'Unpublish' : 'Publish'}
+                        </button>
+
+                        <!-- Edit Button -->
+                        <button
+                          type="button"
+                          class="edit-work-btn px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white text-xs font-bold cursor-pointer transition"
+                          data-work={JSON.stringify(work)}
+                        >
+                          Edit
+                        </button>
+
+                        <!-- Delete Button -->
+                        <button
+                          type="button"
+                          class="delete-work-btn p-1.5 rounded-xl bg-neutral-900 hover:bg-red-950/80 border border-neutral-700 hover:border-red-700 text-neutral-400 hover:text-red-300 text-xs cursor-pointer transition"
+                          data-id={work.id}
+                          data-title={work.title}
+                          title="Delete project"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    <!-- Advanced Edit Modal (No Subtitle / Summary) -->
+    <div id="work-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-[#101014] text-white border border-neutral-800 rounded-3xl p-6 md:p-8 max-w-2xl w-full space-y-6 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-neutral-800 pb-4">
+          <h3 id="work-modal-title" class="text-xl font-bold text-white">Edit Showcase Work</h3>
+          <button type="button" id="close-work-modal-btn" class="text-neutral-400 hover:text-white text-lg cursor-pointer">✕</button>
+        </div>
+
+        <form id="work-form" class="space-y-6">
+          <input type="hidden" id="work-id-input" />
+
+          <!-- Category Select -->
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Category Section</label>
+            <select
+              id="work-section-input"
+              required
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white"
+            >
+              {sections.map((sec) => (
+                <option value={sec.id}>{sec.title}</option>
+              ))}
+            </select>
+          </div>
+
+          <!-- Title -->
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">Project Title</label>
+            <input
+              type="text"
+              id="work-title-input"
+              required
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white"
+            />
+          </div>
+
+          <!-- Media Configuration -->
+          <div class="p-4 rounded-2xl bg-neutral-950/80 border border-neutral-800 space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-white uppercase tracking-wider">Media Asset</label>
+              <div class="flex items-center gap-4 text-xs text-neutral-300">
+                <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                  <input type="radio" name="modalMediaType" value="IMAGE" checked class="text-white focus:ring-0" />
+                  <span>Image</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                  <input type="radio" name="modalMediaType" value="VIDEO" class="text-white focus:ring-0" />
+                  <span>Video</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <input type="hidden" id="work-mediaUrl-input" />
+              <input type="hidden" id="work-posterUrl-input" />
+              <div class="flex items-center gap-4">
+                <input
+                  type="file"
+                  id="work-media-file"
+                  class="block w-full text-xs text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-white file:text-[#101014] hover:file:bg-neutral-200 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  id="upload-media-btn"
+                  class="px-4 py-2 rounded-xl bg-white hover:bg-neutral-200 text-[#101014] text-xs font-bold shrink-0 cursor-pointer shadow transition"
+                >
+                  Upload & Optimize
+                </button>
+              </div>
+              <div id="upload-status" class="text-[11px] text-neutral-400 font-mono"></div>
+            </div>
+          </div>
+
+          <!-- Watch / Project Link URL -->
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-neutral-300">External Watch / Social Link URL</label>
+            <input
+              type="text"
+              id="work-linkUrl-input"
+              placeholder="https://..."
+              class="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-white font-mono"
+            />
+          </div>
+
+          <!-- Toggles (Pin & Publish) -->
+          <div class="flex flex-wrap items-center gap-6 pt-2">
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="work-pinned-input" checked class="w-4 h-4 rounded bg-neutral-900 border-neutral-700 text-white focus:ring-0 cursor-pointer" />
+              <span class="text-xs font-bold text-white">Pin to Homepage Scroll</span>
+            </label>
+
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="work-published-input" checked class="w-4 h-4 rounded bg-neutral-900 border-neutral-700 text-white focus:ring-0 cursor-pointer" />
+              <span class="text-xs font-bold text-white">Publish Immediately</span>
+            </label>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-neutral-800">
+            <button
+              type="button"
+              id="cancel-work-modal-btn"
+              class="px-5 py-2.5 rounded-xl bg-neutral-900 text-neutral-300 text-xs hover:bg-neutral-800 border border-neutral-700 cursor-pointer transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-6 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-[#101014] text-xs font-bold shadow cursor-pointer transition"
+            >
+              Save Project
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Categories and Sections Map (No Emojis)
+    const CATEGORIES = [
+      { slug: 'video-editing', name: 'Video Editing', num: '01' },
+      { slug: 'graphic-design', name: 'Graphic Design', num: '02' },
+      { slug: 'motion-graphics', name: 'Motion Graphics', num: '03' },
+      { slug: 'digital-marketing', name: 'Digital Marketing', num: '04' },
+    ];
+
+    let currentCategorySlug = 'video-editing';
+
+    // UI elements
+    const dropdownBtn = document.getElementById('category-dropdown-btn');
+    const dropdownMenu = document.getElementById('category-dropdown-menu');
+    const chevron = document.getElementById('category-chevron');
+    const activeLabel = document.getElementById('active-category-label');
+
+    const quickHeading = document.getElementById('quick-add-heading');
+    const quickDesc = document.getElementById('quick-add-desc');
+    const quickSlugBadge = document.getElementById('active-category-slug-badge');
+    const quickSectionId = document.getElementById('quick-section-id') as HTMLInputElement;
+    const quickLinkLabel = document.getElementById('quick-link-label');
+    const quickFileLabel = document.getElementById('quick-file-label');
+    const quickFileInput = document.getElementById('quick-file-input') as HTMLInputElement;
+    const quickMediaUrl = document.getElementById('quick-media-url') as HTMLInputElement;
+    const quickUploadFeedback = document.getElementById('quick-upload-feedback');
+
+    // Toggle Dropdown
+    dropdownBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = dropdownMenu?.classList.contains('hidden');
+      if (isHidden) {
+        dropdownMenu?.classList.remove('hidden');
+        chevron?.classList.add('rotate-180');
+        dropdownBtn.setAttribute('aria-expanded', 'true');
+      } else {
+        dropdownMenu?.classList.add('hidden');
+        chevron?.classList.remove('rotate-180');
+        dropdownBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('click', () => {
+      dropdownMenu?.classList.add('hidden');
+      chevron?.classList.remove('rotate-180');
+      dropdownBtn?.setAttribute('aria-expanded', 'false');
+    });
+
+    // Switch Category Function
+    function switchCategory(slug: string, name: string) {
+      currentCategorySlug = slug;
+
+      // Update dropdown button
+      if (activeLabel) activeLabel.innerText = name;
+
+      // Update Tab Pill styles
+      document.querySelectorAll('.category-tab-btn').forEach((btn) => {
+        const btnSlug = btn.getAttribute('data-slug');
+        if (btnSlug === slug) {
+          btn.className = 'category-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer bg-[#101014] text-white shadow';
+        } else {
+          btn.className = 'category-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-100';
+        }
+      });
+
+      // Update Quick Add card texts & section id
+      if (quickHeading) quickHeading.innerText = `Add Work to ${name}`;
+      if (quickSlugBadge) quickSlugBadge.innerText = `#${slug}`;
+
+      // Find matching section in modal select
+      const modalSelect = document.getElementById('work-section-input') as HTMLSelectElement;
+      if (modalSelect) {
+        for (let i = 0; i < modalSelect.options.length; i++) {
+          if (modalSelect.options[i].text.toLowerCase().includes(name.toLowerCase())) {
+            quickSectionId.value = modalSelect.options[i].value;
+            break;
+          }
+        }
+      }
+
+      // Customize labels based on category
+      if (slug === 'graphic-design') {
+        if (quickDesc) quickDesc.innerText = 'Upload graphic project image from device. Set title and save directly.';
+        if (quickLinkLabel) quickLinkLabel.innerText = 'External Behance / Dribbble / Portfolio URL (Optional)';
+        if (quickFileLabel) quickFileLabel.innerText = 'Graphic Design Image (High-Res WebP/PNG/JPEG)';
+      } else if (slug === 'digital-marketing') {
+        if (quickDesc) quickDesc.innerText = 'Set campaign title, Facebook page/campaign link, and banner image.';
+        if (quickLinkLabel) quickLinkLabel.innerText = 'Facebook Page / Project Link URL';
+        if (quickFileLabel) quickFileLabel.innerText = 'Campaign Banner / Cover Image';
+      } else {
+        if (quickDesc) quickDesc.innerText = 'Upload video thumbnail or MP4, and add social media/watch link. Check Pin to Home.';
+        if (quickLinkLabel) quickLinkLabel.innerText = 'Video Watch Link (YouTube, Vimeo, Social Media URL)';
+        if (quickFileLabel) quickFileLabel.innerText = 'Video Thumbnail Cover Image';
+      }
+
+      // Show/hide category sections
+      document.querySelectorAll('.category-section-block').forEach((block) => {
+        const blockSlug = block.getAttribute('data-category-slug');
+        if (blockSlug === slug) {
+          block.classList.remove('hidden');
+          block.classList.add('block');
+        } else {
+          block.classList.add('hidden');
+          block.classList.remove('block');
+        }
+      });
+    }
+
+    // Bind Category switch to Dropdown items & Tab buttons
+    document.querySelectorAll('.category-select-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const slug = item.getAttribute('data-slug') || 'video-editing';
+        const name = item.getAttribute('data-name') || 'Video Editing';
+        switchCategory(slug, name);
+        dropdownMenu?.classList.add('hidden');
+        chevron?.classList.remove('rotate-180');
+      });
+    });
+
+    document.querySelectorAll('.category-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slug = btn.getAttribute('data-slug') || 'video-editing';
+        const name = btn.getAttribute('data-name') || 'Video Editing';
+        switchCategory(slug, name);
+      });
+    });
+
+    // Handle Quick File Upload
+    quickFileInput?.addEventListener('change', async () => {
+      const file = quickFileInput.files?.[0];
+      if (!file) return;
+
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', file.type.startsWith('video') ? 'video' : 'image');
+
+      if (quickUploadFeedback) quickUploadFeedback.innerText = 'Uploading and optimizing with Sharp...';
+
+      try {
+        const res = await fetch('/api/admin/portfolio/upload', {
+          method: 'POST',
+          body: fd,
+        });
+        const result = await res.json();
+        if (result.success) {
+          quickMediaUrl.value = result.data.url;
+          if (quickUploadFeedback) {
+            quickUploadFeedback.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ready: ${result.data.url}</span>`;
+          }
+          (window as any).showToast('File uploaded successfully', 'success');
+        } else {
+          if (quickUploadFeedback) quickUploadFeedback.innerHTML = `<span class="text-red-400">⚠ ${result.error?.message || 'Upload failed'}</span>`;
+        }
+      } catch {
+        if (quickUploadFeedback) quickUploadFeedback.innerHTML = '<span class="text-red-400">⚠ Network error during upload</span>';
+      }
+    });
+
+    // Quick Add Form Submit (No Subtitle/Summary)
+    const quickForm = document.getElementById('quick-add-form') as HTMLFormElement;
+    quickForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = (document.getElementById('quick-title') as HTMLInputElement).value.trim();
+      const linkUrl = (document.getElementById('quick-link-url') as HTMLInputElement).value.trim();
+      const isPinned = (document.getElementById('quick-is-pinned') as HTMLInputElement).checked;
+      const mediaUrl = quickMediaUrl.value.trim();
+      const sectionId = quickSectionId.value;
+
+      if (!title) {
+        (window as any).showToast('Please enter a project title', 'error');
+        return;
+      }
+
+      const mediaType = currentCategorySlug === 'graphic-design' ? 'IMAGE' : (mediaUrl.endsWith('.mp4') ? 'VIDEO' : 'IMAGE');
+
+      const payload = {
+        sectionId,
+        title,
+        subtitle: null,
+        mediaType,
+        mediaUrl: mediaUrl || null,
+        posterUrl: mediaType === 'VIDEO' ? mediaUrl : null,
+        linkLabel: 'View',
+        linkUrl: linkUrl || null,
+        isPinned,
+        isPublished: true,
+      };
+
+      try {
+        const btn = document.getElementById('quick-save-btn') as HTMLButtonElement;
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+
+        const res = await fetch('/api/admin/portfolio/works', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          (window as any).showToast('Project saved successfully!', 'success');
+          setTimeout(() => window.location.reload(), 400);
+        } else {
+          (window as any).showToast(result.error?.message || 'Save failed', 'error');
+          btn.disabled = false;
+          btn.innerText = 'Save to Database';
+        }
+      } catch {
+        (window as any).showToast('Network error while saving project', 'error');
+      }
+    });
+
+    // Instant Toggle Pin to Home
+    document.querySelectorAll('.toggle-pin-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const isCurrentPinned = btn.getAttribute('data-pinned') === 'true';
+        const newPinnedState = !isCurrentPinned;
+
+        // Optimistic UI update
+        btn.setAttribute('data-pinned', String(newPinnedState));
+        btn.innerHTML = `<span>${newPinnedState ? 'Unpin' : 'Pin to Home'}</span>`;
+        if (newPinnedState) {
+          btn.className = 'toggle-pin-btn px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition flex items-center gap-1.5 bg-white text-[#101014] border-white hover:bg-neutral-200';
+        } else {
+          btn.className = 'toggle-pin-btn px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition flex items-center gap-1.5 bg-neutral-900 text-neutral-300 border-neutral-700 hover:bg-neutral-800';
+        }
+
+        const row = btn.closest('.work-row');
+        const badge = row?.querySelector('.pin-badge');
+        if (badge) {
+          badge.className = `pin-badge px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 ${
+            newPinnedState ? 'bg-white text-[#101014] shadow' : 'bg-neutral-900 text-neutral-500 border border-neutral-800'
+          }`;
+          badge.innerHTML = `<span>${newPinnedState ? 'Pinned to Home' : 'Unpinned'}</span>`;
+        }
+
+        try {
+          const res = await fetch('/api/admin/portfolio/works', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'togglePin', id, isPinned: newPinnedState }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast(
+              newPinnedState ? 'Pinned to Homepage!' : 'Unpinned from Homepage',
+              'success'
+            );
+          } else {
+            (window as any).showToast('Failed to update pin state', 'error');
+            setTimeout(() => window.location.reload(), 400);
+          }
+        } catch {
+          (window as any).showToast('Network error while toggling pin', 'error');
+        }
+      });
+    });
+
+    // Toggle Publish
+    document.querySelectorAll('.toggle-publish-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const current = btn.getAttribute('data-published') === 'true';
+        try {
+          const res = await fetch('/api/admin/portfolio/works', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'togglePublish', id, isPublished: !current }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast(`Work ${!current ? 'Published' : 'Unpublished'}`, 'success');
+            setTimeout(() => window.location.reload(), 300);
+          }
+        } catch {
+          (window as any).showToast('Failed to toggle published state', 'error');
+        }
+      });
+    });
+
+    // Delete Work
+    document.querySelectorAll('.delete-work-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const title = btn.getAttribute('data-title');
+        if (!confirm(`Are you sure you want to delete project "${title}"?`)) return;
+
+        try {
+          const res = await fetch(`/api/admin/portfolio/works?id=${id}`, { method: 'DELETE' });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast('Project deleted successfully', 'success');
+            const row = btn.closest('.work-row');
+            row?.remove();
+          } else {
+            (window as any).showToast(result.error?.message || 'Delete failed', 'error');
+          }
+        } catch {
+          (window as any).showToast('Network error during delete', 'error');
+        }
+      });
+    });
+
+    // Reorder Handlers inside a category
+    document.querySelectorAll('.move-work-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const row = btn.closest('.work-row') as HTMLElement;
+        const container = row?.parentElement;
+        if (!row || !container) return;
+
+        const rows = Array.from(container.querySelectorAll('.work-row'));
+        const id = btn.getAttribute('data-id');
+        const dir = btn.getAttribute('data-dir');
+        const currentIndex = rows.findIndex((r) => r.getAttribute('data-id') === id);
+        if (currentIndex === -1) return;
+
+        const targetIndex = dir === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (targetIndex < 0 || targetIndex >= rows.length) return;
+
+        const ids = rows.map((r) => r.getAttribute('data-id') as string);
+        const temp = ids[currentIndex];
+        ids[currentIndex] = ids[targetIndex];
+        ids[targetIndex] = temp;
+
+        try {
+          const res = await fetch('/api/admin/portfolio/works', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'reorder', orderedIds: ids }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            (window as any).showToast('Order updated', 'success');
+            setTimeout(() => window.location.reload(), 300);
+          }
+        } catch {
+          (window as any).showToast('Reorder failed', 'error');
+        }
+      });
+    });
+
+    // Full Modal Controls (No Subtitle / Summary)
+    const modal = document.getElementById('work-modal') as HTMLDivElement;
+    const modalForm = document.getElementById('work-form') as HTMLFormElement;
+    const modalTitle = document.getElementById('work-modal-title') as HTMLHeadingElement;
+    const idInput = document.getElementById('work-id-input') as HTMLInputElement;
+    const sectionInput = document.getElementById('work-section-input') as HTMLSelectElement;
+    const titleInput = document.getElementById('work-title-input') as HTMLInputElement;
+    const mediaUrlInput = document.getElementById('work-mediaUrl-input') as HTMLInputElement;
+    const posterUrlInput = document.getElementById('work-posterUrl-input') as HTMLInputElement;
+    const linkUrlInput = document.getElementById('work-linkUrl-input') as HTMLInputElement;
+    const publishedInput = document.getElementById('work-published-input') as HTMLInputElement;
+    const pinnedInput = document.getElementById('work-pinned-input') as HTMLInputElement;
+    const mediaFileInput = document.getElementById('work-media-file') as HTMLInputElement;
+    const uploadBtn = document.getElementById('upload-media-btn') as HTMLButtonElement;
+    const uploadStatus = document.getElementById('upload-status') as HTMLDivElement;
+
+    // Open Full Modal for Creating Advanced
+    document.getElementById('open-full-modal-btn')?.addEventListener('click', () => {
+      idInput.value = '';
+      titleInput.value = '';
+      mediaUrlInput.value = '';
+      posterUrlInput.value = '';
+      linkUrlInput.value = '';
+      publishedInput.checked = true;
+      pinnedInput.checked = true;
+      uploadStatus.innerText = '';
+      modalTitle.innerText = 'Create Showcase Work';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+
+    // Open Full Modal for Editing
+    document.querySelectorAll('.edit-work-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const workData = JSON.parse(btn.getAttribute('data-work') || '{}');
+        idInput.value = workData.id || '';
+        sectionInput.value = workData.sectionId || '';
+        titleInput.value = workData.title || '';
+        mediaUrlInput.value = workData.mediaUrl || '';
+        posterUrlInput.value = workData.posterUrl || '';
+        linkUrlInput.value = workData.linkUrl || '';
+        publishedInput.checked = Boolean(workData.isPublished);
+        pinnedInput.checked = Boolean(workData.isPinned);
+
+        const mediaTypeRadio = document.querySelector(`input[name="modalMediaType"][value="${workData.mediaType || 'IMAGE'}"]`) as HTMLInputElement;
+        if (mediaTypeRadio) mediaTypeRadio.checked = true;
+
+        uploadStatus.innerText = workData.mediaUrl ? `Current asset: ${workData.mediaUrl}` : '';
+        modalTitle.innerText = 'Edit Showcase Work';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+    });
+
+    // Close Modal
+    const closeModal = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+    document.getElementById('close-work-modal-btn')?.addEventListener('click', closeModal);
+    document.getElementById('cancel-work-modal-btn')?.addEventListener('click', closeModal);
+
+    // Modal Upload Handler
+    uploadBtn?.addEventListener('click', async () => {
+      const file = mediaFileInput.files?.[0];
+      if (!file) {
+        (window as any).showToast('Please select a file to upload', 'error');
+        return;
+      }
+
+      const mediaType = (document.querySelector('input[name="modalMediaType"]:checked') as HTMLInputElement)?.value.toLowerCase();
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', mediaType);
+
+      uploadBtn.disabled = true;
+      uploadStatus.innerText = 'Processing with Sharp...';
+
+      try {
+        const res = await fetch('/api/admin/portfolio/upload', {
+          method: 'POST',
+          body: fd,
+        });
+        const result = await res.json();
+        if (result.success) {
+          mediaUrlInput.value = result.data.url;
+          if (result.data.posterUrl) posterUrlInput.value = result.data.posterUrl;
+          uploadStatus.innerHTML = `<span class="text-emerald-400">✓ Uploaded: ${result.data.url}</span>`;
+          (window as any).showToast('Media uploaded & optimized', 'success');
+        } else {
+          uploadStatus.innerHTML = `<span class="text-red-400">⚠ ${result.error?.message || 'Upload failed'}</span>`;
+        }
+      } catch {
+        uploadStatus.innerHTML = '<span class="text-red-400">⚠ Network error</span>';
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+
+    // Modal Form Submit (No Subtitle / Summary)
+    modalForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = idInput.value;
+      const isEdit = Boolean(id);
+      const mediaType = (document.querySelector('input[name="modalMediaType"]:checked') as HTMLInputElement)?.value as 'IMAGE' | 'VIDEO';
+
+      const payload = {
+        sectionId: sectionInput.value,
+        title: titleInput.value.trim(),
+        subtitle: null,
+        mediaType,
+        mediaUrl: mediaUrlInput.value.trim() || null,
+        posterUrl: posterUrlInput.value.trim() || null,
+        linkLabel: 'View',
+        linkUrl: linkUrlInput.value.trim() || null,
+        isPublished: publishedInput.checked,
+        isPinned: pinnedInput.checked,
+      };
+
+      try {
+        const url = isEdit ? `/api/admin/portfolio/works?id=${id}` : '/api/admin/portfolio/works';
+        const method = isEdit ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (result.success) {
+          (window as any).showToast(`Project ${isEdit ? 'updated' : 'created'} successfully!`, 'success');
+          setTimeout(() => window.location.reload(), 400);
+        } else {
+          (window as any).showToast(result.error?.message || 'Save failed', 'error');
+        }
+      } catch {
+        (window as any).showToast('Network error while saving project', 'error');
+      }
+    });
+  </script>
+</AdminLayout>
